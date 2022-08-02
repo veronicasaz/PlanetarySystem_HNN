@@ -1,0 +1,29 @@
+{
+    "data_dir": "./dataset",
+    "save_dir": "./dataset",
+    
+    "Number of experiments": " ",
+    "N_exp": 500,
+    "N_exp_test": 25,
+    "time_step": 5.0e-3,
+    "t_final": 30,
+    "bodies": 3,
+    "asteroids": 1,
+    
+    "ranges" :
+    {
+       "m1": [9.543e-4, 2.857e-4],
+       "m2": [1e-3, 1e-2],
+       "a1": [2.2, 3.2],
+       "aJ": [4.9, 5.5],
+       "aS": [9.0, 10.5]
+    },
+    "Comment": "m1 in solar masses, m2 in kg",
+    "Comment": "minimum is perihelium, max apohelium",
+
+    "data_frac": 1.0,
+    "standardize": false,
+    "log_output": false
+}
+
+
