@@ -197,13 +197,13 @@ if __name__ == "__main__":
     settings = {**settings_dataset, **settings}
 
     # Choose case
-    # name = 'JS'
-    name = 'asteroid'
+    name = 'JS'
+    # name = 'asteroid'
 
     ####### GET DATA ###########
     # Only 1 of the 2 necessary
     # data = process_data(settings) # comment if not necessary. Only needed once
-    data = get_data(settings, plot = False, name = name+'/') # Case with asteroids
+    data = get_data(settings, plot = False, name = name+'/')
     
     ####### TRAIN ##########
     if name == 'JS':
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     else:
         settings['bodies'] = 3 # Case with asteroid
         
-    # train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/')
+    train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/')
     # train_multiple(settings, data, 6)
     # autokeras(settings, data) # Check best parameters
     

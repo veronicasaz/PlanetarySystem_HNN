@@ -12,6 +12,7 @@ import h5py
 import json
 from pyDOE import lhs
 
+import time
 from wh_generate_database import WisdomHolman
 
 
@@ -44,7 +45,7 @@ if __name__ == '__main__':
         
         # Latin hypercube for orbit parameters
         params = lhs(len(x_limits)-1, samples = N_exp) * (x_limits[1:, 1]- x_limits[1:, 0]) + x_limits[1:, 0] 
-
+        time_0 = time.time()
         for trail in range(N_exp):
             print('Trail #%d/%d (train)' % (trail+1, N_exp))
             wh = WisdomHolman()
@@ -97,6 +98,7 @@ if __name__ == '__main__':
                 for dset in data.keys():
                     h5f.create_dataset(dset, data=data[dset], compression="gzip")
 
+            print(time.time()- time_0, N_exp)
     # Save to file
     path_dataset = config_data['data_dir']
     with h5py.File(os.path.join(path_dataset, 'train_test.h5'), 'w') as h5f:

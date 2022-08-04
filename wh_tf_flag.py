@@ -33,6 +33,7 @@ class WisdomHolman(Integrator):
         
         self.accel_file_path = accel_file_path
         self.accel_file_path_2 = accel_file_path + "flag_list.txt"
+        self.accel_file_path_3 = accel_file_path + "H.txt"
         self.flag = flag
         self.multiple_nets = multiple_nets
         
@@ -91,10 +92,12 @@ class WisdomHolman(Integrator):
         accelerations_list.append(accel)
         flags_list = np.zeros(self.particles.N)
 
+        self.H = list()
         while t_current < to_time:
-            helio, accel, flag_list = self.wh_advance_step(helio, t_current, self.h, self.particles.masses, self.particles.N, accel, self.CONST_G, nih)
+            helio, accel, flag_list, H_i = self.wh_advance_step(helio, t_current, self.h, self.particles.masses, self.particles.N, accel, self.CONST_G, nih)
             accelerations_list.append(accel)
             flags_list = np.row_stack((flags_list, flag_list))
+            self.H.append(H_i)
 
             t_current += self.h
 
@@ -107,15 +110,16 @@ class WisdomHolman(Integrator):
             rel_energy_error = np.abs((__energy-self.__energy_init) / self.__energy_init)
             self.energy.append(rel_energy_error)
             self.logger.info('t = %f, dE/E0 = %g, N = %d' % (t_current, rel_energy_error, self.particles.N))
-            if self.training_mode:
+            # if self.training_mode:
                 # save training data 
-                self.coord.append(helio)
-                self.dcoord.append(np.append(helio[3*self.particles.N:], accel))
+            self.coord.append(helio)
+            self.dcoord.append(np.append(helio[3*self.particles.N:], accel))
             self.store_state()
 
         if self.accel_file_path != None:
             np.savetxt(self.accel_file_path, accelerations_list)
             np.savetxt(self.accel_file_path_2, flags_list)
+            np.savetxt(self.accel_file_path_3, self.H)
 
         return 0
 
@@ -294,6 +298,7 @@ class WisdomHolman(Integrator):
 
         # Compute acceleration at t + dt:
         flag_list = np.zeros(nbodies)
+        H_i = 0
         if nih is False:
             accel = WisdomHolman.compute_accel(helio, jacobi, masses, nbodies, G)
         else:
@@ -373,7 +378,7 @@ class WisdomHolman(Integrator):
                 output_n = np.array(self.hnn.predict(input_nn))[0]
                 accel = np.zeros(np.shape(accel)) # include acceleration =0 of central body
                 accel[3:] = output_n
-                H_i = self.hnn.predict(input_nn)[0]
+                H_i = self.hnn.predict(input_nn, pred_type = 'H')[0]
 
                 # Check if prediction by ANN is valid
                 if self.flag == True and np.any( abs(np.log10(abs(accel_prev)+1e-11) - np.log10(abs(accel)+1e-11)) >  1.5):
@@ -398,7 +403,7 @@ class WisdomHolman(Integrator):
         # Kick:
         helio = WisdomHolman.wh_kick(helio, dt / 2, masses, nbodies, accel)
 
-        return helio, accel, flag_list
+        return helio, accel, flag_list, H_i
 
     @staticmethod
     def wh_kick(x, dt, masses, nbodies, accel):

@@ -12,9 +12,13 @@ import h5py
 
 from wh_tf_flag import WisdomHolman
 import matplotlib.pyplot as plt
+import matplotlib
+
 from data import load_json
 
 from nn_tensorflow import  ANN
+
+matplotlib.rcParams['axes.formatter.useoffset'] = False
 
 # Setup rebound 
 sr = rebound.Simulation()
@@ -133,7 +137,7 @@ def calculate_centralH(data, m):
     for i in range(particles):
         T += m[i] * np.linalg.norm(v[i,:])**2 / 2 
     for j in range(1, particles):
-        U += G * m[0] *m[i] / np.linalg.norm(r[0, :]- r[i,:])
+        U -= G * m[0] *m[i] / np.linalg.norm(r[0, :]- r[i,:])
     H = T + U
     return H
 
@@ -953,6 +957,49 @@ def plot_asteroids():
     plt.savefig('./Experiments/AsteroidVsTime/timeVsError_%dyr.png' % t_end)
     plt.show()
 
+def plot_energyvsH(sim, sim2):
+    """
+    Plot interactive energy vs output of the HNN.   
+        Only implemented for JS case 
+    INPUTS:
+        sim1: numerical integration
+        sim2: numerical integration with HNN
+    """
+    total_H = np.zeros(len(sim2.H))
+    time = np.linspace(0, sim.t, num = len(sim2.H))
+
+    data_nb = sim.coord
+    data_nih = sim2.coord
+
+    # Calculate energy
+    E_1 = np.zeros(len(sim2.H))
+    E_2 = np.zeros(len(sim2.H))
+    data = np.zeros((3, 6))
+    for i in range(len(sim2.H)):
+        data[:,0:3] = data_nb[i][0:3*3].reshape((3,3))
+        data[:,3:] = data_nb[i][ 3*3:].reshape((3,3))
+        # E_1[i] = sim.energy[i]- calculate_centralH(data, sim.particles.masses)
+        E_1[i] = calculate_interH(data, sim.particles.masses)
+        data[:,0:3] = data_nih[i][0:3*3].reshape((3,3))
+        data[:,3:] = data_nih[i][3*3:].reshape((3,3))
+        # E_2[i] = sim2.energy[i] - calculate_centralH(data, sim2.particles.masses)
+        E_2[i] = calculate_interH(data, sim2.particles.masses)
+
+
+    fig, axes = plt.subplots(1,1, figsize=(8,6))
+    axes.plot(time, E_1, color = color[3], label = 'WH Energy')
+    axes.plot(time, E_2, ':', color = color[9], label = 'WH-HNN Energy')
+    axes.plot(time, np.array(sim2.H),color = color[5], label = 'WH-HNN H')
+    # plt.title('Comparison of interactive Hamiltonian \n and the predicted output of the HNN', fontsize = 13)
+    plt.xlabel('Time (years)', fontsize =20)
+    
+    plt.xticks(fontsize = 16)
+    plt.yticks(fontsize = 16)
+    plt.legend(fontsize = 20)
+    plt.tight_layout()
+    plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr_H_inter.png' % t_end)
+    plt.show()
+
 if __name__ == "__main__":
     h = 1e-1
     multiple = 'JS'
@@ -960,7 +1007,7 @@ if __name__ == "__main__":
     
     run = 1
     if run == 1:
-        t_end = 5000
+        t_end = 20
         if multiple == 'JS':
             asteroids = 0
             asteroids_extra = 0
@@ -971,9 +1018,11 @@ if __name__ == "__main__":
         # General
         ##########################################
         sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '')
+        if multiple == 'JS':
+            plot_energyvsH(sim, sim2)
         # plot_general(sim, sim2, sim3, t, asteroids, asteroids_extra)
-        plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra)
-        plot_accelerations(sim, sim2, sim3, typenet = multiple)
+        # plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra)
+        # plot_accelerations(sim, sim2, sim3, typenet = multiple)
     
     elif run == 2: 
         t_end = 30

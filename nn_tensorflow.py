@@ -192,7 +192,7 @@ class ANN(tf.keras.Model):
             self.optimizer = ke.optimizers.Adam(learning_rate = self.settings['learning_rate'], clipnorm=1.0)
 
         # Loss function
-        if self.settings['loss'] == 'mse':
+        if self.settings['loss'] == 'loss_mse':
             self.loss = loss_mse
         elif self.settings['loss'] == 'log':
             self.loss = tf.keras.losses.MeanSquaredLogarithmicError()
@@ -305,7 +305,7 @@ class ANN(tf.keras.Model):
             else:
                 y_pred = H
             loss_value = self.loss(x, y, y_pred)
-        
+
         # Train network
         grads = g.gradient(loss_value, self.model.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
@@ -512,7 +512,7 @@ class ANN(tf.keras.Model):
         self.model.load_weights(self.path_model +'my_model_weights.h5')
         return self.model
 
-    def predict(self, inp, path_std = None, std = False):
+    def predict(self, inp, path_std = None, std = False, pred_type = 'dI'):
         """
         predict: Predict accelerations when output is H
         INPUTS:
@@ -543,7 +543,12 @@ class ANN(tf.keras.Model):
             g.watch(x)
             H = self.model(x, training=False)
         
-        if self.settings['output_dim'] == "H" and self.settings['loss_variable'] == 'dI':
+        if pred_type == 'dI':
+            dH = g.gradient(H, x)
+            y_pred = self.time_derivative(dH, x)
+        elif pred_type == 'H':
+            y_pred = H
+        elif self.settings['output_dim'] == "H" and self.settings['loss_variable'] == 'dI':
             dH = g.gradient(H, x)
             y_pred = self.time_derivative(dH, x)
         else:
