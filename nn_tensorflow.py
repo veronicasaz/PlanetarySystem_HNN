@@ -21,6 +21,10 @@ from data import standardize, rot_invariance, rot_invariance_inverse
 tf.random.set_seed(1234) # keep track of seed
 tf.keras.backend.set_floatx('float64')
 
+import matplotlib
+matplotlib.rcParams['mathtext.fontset'] = 'stix'
+matplotlib.rcParams['font.family'] = 'STIXGeneral'
+
 color = [ 'skyblue','royalblue', 'blue', 'navy','slateblue', 'coral', 'salmon',\
     'orange', 'burlywood', 'lightgreen', 'olivedrab','darkcyan' ]
 
@@ -45,19 +49,25 @@ def plot_tanh_log():
     y3[0:len(y3)//2-1] *= 0
     y4 = np.tanh(x) * x
     y5 = x + np.sin(x)**2
-    f, ax = plt.subplots()
-    plt.plot(x, y1, '-.', label =r'SymmetricLog: f(x) = $tanh(x)\; \cdot log(tanh(x) \cdot x+1)$', color = color[3])
-    plt.plot(x, y2, label ='tanh:: f(x) = $tanh(x)$', color = color[9])
-    plt.plot(x, y3, '--', label ='ReLU: f(x) = $max(0, z$)', color = color[5])
+    f, ax = plt.subplots(figsize = (13,6),nrows=1, ncols=1)
+    lw = 4
+    plt.plot(x, y1, '-.', linewidth = lw,  label =r'SymmetricLog: f(x) = $tanh(x)\; \cdot log(tanh(x) \cdot x+1)$', color = color[3])
+    plt.plot(x, y2, linewidth = lw, label ='tanh: f(x) = $tanh(x)$', color = color[9])
+    plt.plot(x, y3, '--', linewidth = lw, label ='ReLU: f(x) = $max(0, z$)', color = color[5])
 
-    plt.xlabel('x', fontsize= 15)
-    plt.ylabel('f(x)', fontsize= 15)
-    plt.title("Activation functions", fontsize= 18)
+    plt.xlabel('x', fontsize= 23)
+    plt.ylabel('f(x)', fontsize= 23)
+    # plt.title("Activation functions", fontsize= 20)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xscale('symlog')
     ax.set_yscale('symlog')
-    plt.legend(fontsize = 12, loc= 'upper left')
+    ax.tick_params(axis='both', which='major', labelsize=18)
+    ax.tick_params(axis='both', which='minor', labelsize=15)
+    # plt.legend(fontsize = 18, loc= 'upper left')
+    plt.legend(fontsize = 18, bbox_to_anchor=(1.0, 1.0) )
+    
+    plt.tight_layout()
     # plt.grid(alpha = 0.5)
     plt.savefig("./ANN_tf/tanh_log.png", dpi = 100)
     plt.show()

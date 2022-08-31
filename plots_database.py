@@ -9,6 +9,10 @@ import seaborn as sns
 import pandas as pd 
 from data import get_dataset
 
+import matplotlib
+matplotlib.rcParams['mathtext.fontset'] = 'stix'
+matplotlib.rcParams['font.family'] = 'STIXGeneral'
+
 color = [ 'skyblue','royalblue', 'blue', 'navy','slateblue', 'coral', 'salmon',\
     'orange', 'burlywood', 'lightgreen', 'olivedrab','darkcyan' ]
     
@@ -347,7 +351,7 @@ def plot_trajectory(data, name):
     INPUTS: 
         data: dataset with inputs and outputs
     """
-    fig, ax = plt.subplots(figsize = (8,6),nrows=1, ncols=1)
+    fig, ax = plt.subplots(figsize = (10,6),nrows=1, ncols=1)
     marker = [ 'o','.', '*', 's']
 
     # fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.4)
@@ -358,22 +362,25 @@ def plot_trajectory(data, name):
     x_2 = data['coords'][:500, 5]
     y_2 = data['coords'][:500, 6]
 
+    plt.scatter(0,0, color = color[8], marker = marker [0], label = 'Sun')
+
     if name == 'asteroid/':
         x_3 = data['coords'][:200, 9]
         y_3 = data['coords'][:200, 10]
         plt.scatter(x_3, y_3, color = color[5], marker = marker[2],  s = 16, label = 'Asteroids')
 
-    plt.scatter(0,0, color = color[8], marker = marker [0], label = 'Sun')
     plt.scatter(x_1, y_1, color = color[9], marker = marker[1], label = 'Jupiter')
     plt.scatter(x_2, y_2, color = color[3], marker = marker[1], label = 'Saturn')
-    plt.xlabel('x (au)', fontsize = 20)
-    plt.ylabel('y (au)', fontsize = 20)
+    plt.xlabel('x (au)', fontsize = 23)
+    plt.ylabel('y (au)', fontsize = 23)
     plt.xticks(fontsize=18)
     plt.yticks(fontsize=18)
     plt.axis('equal')
 
     plt.grid(alpha = 0.5)
-    plt.legend(fontsize = 20, framealpha = 0.85, loc = 'upper left')
+    # plt.legend(fontsize = 20, framealpha = 0.85, loc = 'upper left')
+    plt.legend(fontsize = 23, framealpha = 1.0, bbox_to_anchor=(1.0, 1.0))
+    
     # plt.title("Distribution of positions of Jupiter, Saturn, and the asteroids", fontsize = 15)
     plt.tight_layout()
     plt.savefig( "./dataset/"+name+"trajectory_distribution.png", dpi = 100)

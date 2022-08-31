@@ -31,6 +31,10 @@ from nn_tensorflow import tanh_log, loss_mse
 from data import get_dataset, get_traintest_data, load_json
 from test_dataset import plot_prediction_error, load_dataset
 
+import matplotlib
+matplotlib.rcParams['mathtext.fontset'] = 'stix'
+matplotlib.rcParams['font.family'] = 'STIXGeneral'
+
 tf.random.set_seed(1234)
 tf.keras.backend.set_floatx('float64')
 
@@ -530,7 +534,7 @@ def plot_optim(data, N):
     
     subplot2 = 1
     subplot1 = 1
-    fig, ax = plt.subplots(subplot1, subplot2, figsize=(12,10))
+    fig, ax = plt.subplots(subplot1, subplot2, figsize=(15,8))
     
     # cm = plt.cm.get_cmap('jet')
     # sc = ax.scatter(params[:, 1], params[:, 2], s = 60, marker = 'o', c = loss[:, 0], norm=plc.LogNorm(), cmap =  cm)
@@ -555,7 +559,7 @@ def plot_optim(data, N):
     plt.scatter(D_samples[index_val, 0], D_samples[index_val, 1], s = 250, color =color[5], marker = 's' , label = label2)
 
     # plt.title('Results of hyperparameter optimization', fontsize = 22)
-    legend = plt.legend(fontsize = 20, loc = 'upper left')
+    legend = plt.legend(fontsize = 23, bbox_to_anchor=(1.0, 1.0))
     # legend = plt.legend(fontsize = 12, title = 'Number of training samples, layers, neurons per layer, ratio of neurons, initial learning rate, \nlearning rate decay, learning rate steps')
     # legend.get_title().set_fontsize('15')
     plt.grid(alpha = 0.5)
@@ -563,8 +567,8 @@ def plot_optim(data, N):
 
     plt.xlabel("Train loss", fontsize = 25)
     plt.ylabel("Validation loss", fontsize = 25)
-    plt.xticks(fontsize = 18)
-    plt.yticks(fontsize = 18)
+    plt.xticks(fontsize = 22)
+    plt.yticks(fontsize = 22)
     plt.xscale('log')
     plt.yscale('log')
     plt.tight_layout()
