@@ -677,10 +677,10 @@ def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelera
     # x2 = np.copy(x)
 
     asteroids_plot = asteroids+asteroids_extra
-    fig, axes = plt.subplots(3,2+asteroids_plot, figsize=(20,8))
-    fig.subplots_adjust(top=0.9,hspace = 0.4, wspace= 0.5)
+    fig, axes = plt.subplots(3,1+asteroids_plot, figsize=(15,8))
+    fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.4, wspace= 0.25)
 
-    for plot in range(1,3+asteroids_plot):
+    for plot in range(2,3+asteroids_plot):
         a_WH = np.zeros(len(accelerations_ANN_noflag))
         a_ANN = np.zeros(len(accelerations_ANN_noflag))
         a_DNN = np.zeros(len(accelerations_ANN_flag))
@@ -690,50 +690,43 @@ def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelera
             a_ANN[item] = np.linalg.norm(accelerations_ANN_noflag[item, plot*3:plot*3+3])
             a_DNN[item] = np.linalg.norm(accelerations_ANN_flag[item, plot*3:plot*3+3])
         
-        axes[0, plot-1].plot(x, a_WH, color = color[3], label = 'WH')
-        axes[1, plot-1].plot(x, a_ANN, color = color[9], label = 'Without flags')
-        axes[2, plot-1].plot(x, a_DNN, color = color[5], label = 'With flags')
+        axes[0, plot-2].plot(x, a_WH, color = color[3], label = 'WH')
+        axes[1, plot-2].plot(x, a_ANN, color = color[9], label = 'Without flags')
+        axes[2, plot-2].plot(x, a_DNN, color = color[5], label = 'With flags')
         
         index_DNN = np.where(flags[:, plot] == 0)[0]
         x2_DNN = np.copy(x)
         x2_DNN = np.delete(x2_DNN, index_DNN)
-        axes[2, plot-1].scatter(x2_DNN, np.delete(a_DNN, index_DNN), color = color[5], label = 'Numerically')
-
-        axes[0,plot-1].set_ylabel('a ($au/yr^2$)', fontsize = 18)
-        axes[0,plot-1].grid(alpha = 0.5)
-        axes[0,plot-1].set_title(names[plot-1], fontsize = 20)
+        axes[2, plot-2].scatter(x2_DNN, np.delete(a_DNN, index_DNN), color = color[5], label = 'Numerically')
+        axes[0,plot-2].set_title(names[plot-1], fontsize = 24)
         
-        # axes[0,plot-1].set_xticklabels(axes[0,plot-1].get_xticks() , fontsize = 15)
-        # axes[0,plot-1].set_yticklabels(axes[0,plot-1].get_yticks(), fontsize = 15)
-        ticks = -np.log10(axes[0,plot-1].get_yticks())
-        dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-        axes[0,plot-1].set_yticklabels(np.round(trunc(axes[0,plot-1].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
-        # axes[0,plot-1].set_yticklabels(axes[0,plot-1].get_yticks(), rotation = 0, fontsize = 14)
-        axes[0,plot-1].set_xticklabels(np.round(trunc(axes[0,plot-1].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
+        # ticks = -np.log10(axes[0,plot-2].get_yticks())
+        # dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+        # axes[0,plot-2].set_yticklabels(np.round(trunc(axes[0,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
+        # axes[0,plot-2].set_xticklabels(np.round(trunc(axes[0,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
 
-        axes[1,plot-1].set_ylabel('a ($au/yr^2$)', fontsize = 18)
-        axes[1,plot-1].grid(alpha = 0.5)
-        # axes[1,plot-1].set_title(names[plot-1])
-        ticks = -np.log10(axes[1,plot-1].get_yticks())
-        dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-        axes[1,plot-1].set_yticklabels(np.round(trunc(axes[1,plot-1].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
-        axes[1,plot-1].set_xticklabels(np.round(trunc(axes[1,plot-1].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
+        # ticks = -np.log10(axes[1,plot-2].get_yticks())
+        # dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+        # axes[1,plot-2].set_yticklabels(np.round(trunc(axes[1,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
+        # axes[1,plot-2].set_xticklabels(np.round(trunc(axes[1,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
         
-        axes[2,plot-1].set_xlabel('$t$ (yr)', fontsize = 18)
-        axes[2,plot-1].set_ylabel('a ($au/yr^2$)', fontsize = 18)
-        axes[2,plot-1].grid(alpha = 0.5)
+        axes[2,plot-2].set_xlabel('$t$ (yr)', fontsize = 22)
+        # axes[2,plot-2].set_ylabel('a ($au/yr^2$)', fontsize = 24)
         # axes[2,plot-1].set_title(names[plot-1])
-        axes[2,plot-1].annotate("Flags: %i / %i"%(np.count_nonzero(flags[:, plot]), len(accelerations_ANN_flag)), \
-                xy =  (x[int(len(x)//2)]*1.2, max((a_DNN))*0.9), fontsize = 12)
-        ticks = -np.log10(axes[2,plot-1].get_yticks())
-        dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-        axes[2,plot-1].set_yticklabels(np.round(trunc(axes[2,plot-1].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
-        axes[2,plot-1].set_xticklabels(np.round(trunc(axes[2,plot-1].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
+        axes[2,plot-2].annotate("Flags: %i / %i"%(np.count_nonzero(flags[:, plot]), len(accelerations_ANN_flag)), \
+                xy =  (x[int(len(x)//2)]*1.27, max((a_DNN))*0.92), fontsize = 15)
         
-
-    axes[0,1].legend(loc = 'center left', framealpha = 0.5, fontsize = 14)
-    axes[1,1].legend(loc = 'center left', framealpha = 0.5, fontsize = 14)
-    axes[2,1].legend(loc = 'center left', framealpha = 0.5, fontsize = 14)
+        for iterate in range(3):
+            axes[iterate,plot-2].grid(alpha = 0.5)        
+            ticks = -np.log10(axes[iterate,plot-2].get_yticks())
+            dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+            axes[iterate,plot-2].set_yticklabels(np.round(trunc(axes[iterate,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+            axes[iterate,plot-2].set_xticklabels(np.round(trunc(axes[iterate,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+            axes[iterate,0].set_ylabel('a ($au/yr^2$)', fontsize = 22)
+            axes[iterate,0].legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
+    # axes[0,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
+    # axes[1,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
+    # axes[2,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
 
     # plt.tight_layout()
     plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagcomparison.png' % t_end)
@@ -1010,10 +1003,10 @@ def plot_energyvsH(sim, sim2):
 
 if __name__ == "__main__":
     h = 1e-1
-    multiple = 'JS'
-    # multiple = 'Asteroid_JS'
+    # multiple = 'JS'
+    multiple = 'Asteroid_JS'
     
-    run = 1
+    run = 2
     if run == 1:
         t_end = 25
         if multiple == 'JS':

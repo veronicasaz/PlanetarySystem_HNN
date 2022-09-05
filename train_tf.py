@@ -17,7 +17,8 @@ from plots_database import plot_pairplot, plot_distribution, plot_correlation,\
              plot_distance, plot_distance3D, plot_covariance_samples, plot_covariance,\
              plot_trajectory
 from test_dataset import plot_prediction_error, plot_prediction_error_H, \
-            load_dataset, plot_prediction_error_HNNvsDNN, plot_prediction_error_HNNvsDNN_JS
+            load_dataset, plot_prediction_error_HNNvsDNN, plot_prediction_error_HNNvsDNN_JS, \
+            plot_prediction_error_HNNvsDNN_JS_dif
 
 
 def process_data(config):
@@ -170,11 +171,11 @@ def predict_HNNvsDNN(path_pic, settings, settings_file_path, data, name):
     if name == 'asteroid':
         # predict
         settings['output_dim'] = 'H'
-        x, y_pred, y_real = load_dataset(settings, settings_file_path, data , path_model = path_pic + "Model_asteroids/1/")
+        x, y_pred, y_real = load_dataset(settings, settings_file_path, data , path_model = path_pic + "Model_asteroids/1_lossAll/")
         settings['output_dim'] = 'H'
-        x3, y_pred3, y_real3 = load_dataset(settings, settings_file_path, data, path_model = path_pic + "Model_asteroids/2/")
+        x3, y_pred3, y_real3 = load_dataset(settings, settings_file_path, data, path_model = path_pic + "Model_asteroids/2_lossa/")
         settings['output_dim'] = 'a'
-        x2, y_pred2, y_real2 = load_dataset(settings, settings_file_path, data, path_model = path_pic + "Model_asteroids_DNN/")
+        x2, y_pred2, y_real2 = load_dataset(settings, settings_file_path, data, path_model = path_pic + "Model_asteroids_DNN/", drdv = True)
 
         # plot together    
         plot_prediction_error_HNNvsDNN(path_pic, x, y_pred, y_real, x2, y_pred2, y_real2, x3, y_pred3, y_real3)
@@ -182,11 +183,11 @@ def predict_HNNvsDNN(path_pic, settings, settings_file_path, data, name):
         settings['output_dim'] = 'H'
         x, y_pred, y_real = load_dataset(settings, settings_file_path, data , path_model = path_pic + "Model_JS/")
         settings['output_dim'] = 'a'
-        x2, y_pred2, y_real2 = load_dataset(settings, settings_file_path, data, path_model = path_pic + "Model_JS_DNN/")
+        x2, y_pred2, y_real2 = load_dataset(settings, settings_file_path, data, path_model = path_pic + "Model_JS_DNN/", drdv = True)
 
         # plot together    
-        plot_prediction_error_HNNvsDNN_JS(path_pic, x, y_pred, y_real, x2, y_pred2, y_real2)
-
+        # plot_prediction_error_HNNvsDNN_JS(path_pic, x, y_pred, y_real, x2, y_pred2, y_real2)
+        plot_prediction_error_HNNvsDNN_JS_dif(path_pic, x, y_pred, y_real, x2, y_pred2, y_real2)
 
 if __name__ == "__main__":
 
@@ -197,14 +198,13 @@ if __name__ == "__main__":
     settings = {**settings_dataset, **settings}
 
     # Choose case
-    # name = 'JS'
-    name = 'asteroid'
+    name = 'JS'
+    # name = 'asteroid'
 
     ####### GET DATA ###########
     # Only 1 of the 2 necessary
     # data = process_data(settings) # comment if not necessary. Only needed once
-    data = get_data(settings, plot = True, name = name+'/')
-    sldkfl
+    data = get_data(settings, plot = False, name = name+'/')
     
     ####### TRAIN ##########
     if name == 'JS':
@@ -212,7 +212,7 @@ if __name__ == "__main__":
     else:
         settings['bodies'] = 3 # Case with asteroid
         
-    train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/')
+    # train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/')
     # train_multiple(settings, data, 6)
     # autokeras(settings, data) # Check best parameters
     

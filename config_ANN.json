@@ -5,32 +5,31 @@
     "save_dir": "./ANN_tf/",
     "model_path": "./ANN_tf/",
     
-    "output_dim": "H", 
+    "output_dim": "a", 
     "comment on output_dim": "H: just one scalar, which is the Hamiltonian, or dI which is the same size as the input dimension, a, 3 only accelerations",
     "loss_variable": "dI",
     "comment on loss_variable": "if dI, use the computed derivatives in the loss function, if H, use the H in loss function",
-    "case": "SJSa",
-    "Comment on case": "SJS only with Jupiter and Saturn SJSa with asteroids",
+
     
     "rotate": false,
     "DATA": "data_frac is for the percentage of test data, validation_split for the validation data",
     "validation_split": 0.1,
-    "train_samples": 250000,
+    "train_samples": 150000,
     "test_samples": 10000,
     "dtype": "float",
 
     "layer": 3,
-    "neurons": 300,
+    "neurons": 200,
     "neurons_ratio": 0.6,
     "activations": "tanh_log",
     "activations2": false,
     "weights": "glorot",
     "Comment on activations": "tanh with glorot, relu with he_uniform, tanh_log, selu with lecun_normal",
 
-    "learning_rate": 0.00005,
+    "learning_rate": 0.01,
     "lr_constant": false,
     "learning_rate_decay": 0.9,
-    "learning_rate_steps": 100000,
+    "learning_rate_steps": 200000,
     "adam_beta1": 0.9,
     "adam_beta2": 0.999,
     
@@ -38,11 +37,11 @@
     "Comment dropout": "if 0, no dropout",
 
 
-    "max_epochs": 2000,
-    "batch_size": 1000,
+    "max_epochs": 200,
+    "batch_size": -1,
     
-    "loss": "loss_asteroid",
-    "comment_loss": "mse, log, loss_mse_loga, loss_weight_mse, loss_asteroid"
+    "loss": "loss_mse",
+    "comment_loss": "loss_mse, log, loss_mse_loga, loss_weight_mse, loss_asteroid"
     
 
 }

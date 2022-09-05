@@ -556,7 +556,7 @@ class ANN(tf.keras.Model):
         if pred_type == 'dI':
             dH = g.gradient(H, x)
             y_pred = self.time_derivative(dH, x)
-        elif pred_type == 'H':
+        elif pred_type == 'H' or pred_type == 'a':
             y_pred = H
         elif self.settings['output_dim'] == "H" and self.settings['loss_variable'] == 'dI':
             dH = g.gradient(H, x)
