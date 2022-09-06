@@ -155,7 +155,7 @@ def plot_loss():
 # plot_loss()
 
 class ANN(tf.keras.Model):
-    def __init__(self, settings, path_model = None, path_std = None, restart = False, seed = None, std = False):
+    def __init__(self, settings, path_model = None, path_std = None, restart = False, seed = None, std = False, pred_type = 'dI'):
         """
         ANN: class for the neural network
         INPUTS:
@@ -178,6 +178,8 @@ class ANN(tf.keras.Model):
         self.path_std = path_std
         if self.path_std == None:
             self.path_std = './dataset/'
+
+        self.pred_type = pred_type
 
         # Input dimension
         if ('input_dim' in self.settings) == False:
@@ -522,7 +524,7 @@ class ANN(tf.keras.Model):
         self.model.load_weights(self.path_model +'my_model_weights.h5')
         return self.model
 
-    def predict(self, inp, path_std = None, std = False, pred_type = 'dI'):
+    def predict(self, inp, path_std = None, std = False):
         """
         predict: Predict accelerations when output is H
         INPUTS:
@@ -553,10 +555,10 @@ class ANN(tf.keras.Model):
             g.watch(x)
             H = self.model(x, training=False)
         
-        if pred_type == 'dI':
+        if self.pred_type == 'dI':
             dH = g.gradient(H, x)
             y_pred = self.time_derivative(dH, x)
-        elif pred_type == 'H' or pred_type == 'a':
+        elif self.pred_type == 'H' or self.pred_type == 'a':
             y_pred = H
         elif self.settings['output_dim'] == "H" and self.settings['loss_variable'] == 'dI':
             dH = g.gradient(H, x)

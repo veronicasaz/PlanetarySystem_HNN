@@ -100,25 +100,25 @@ def load_DNN(multiple):
         Nets = []
         config['output_dim'] = 'a'
         config['bodies'] = 2 # Case with SJS
-        ANN_tf = ANN(config, path_model = path_model+'JS/Model_JS_DNN/', path_std = path_std)
+        ANN_tf = ANN(config, path_model = path_model+'JS/Model_JS_DNN/', path_std = path_std, pred_type = 'a')
         ANN_tf.load_model_fromFile(path_model+'JS/Model_JS_DNN/')
         Nets.append(ANN_tf)
         
         config['bodies'] = 3 # Case with SJS
-        ANN_tf = ANN(config, path_model = path_model+'asteroid/Model_asteroids_DNN/', path_std = path_std)
+        ANN_tf = ANN(config, path_model = path_model+'asteroid/Model_asteroids_DNN/', path_std = path_std, pred_type = 'a')
         ANN_tf.load_model_fromFile(path_model+'asteroid/Model_asteroids_DNN/')
         Nets.append(ANN_tf)
         return Nets
     elif multiple == 'Asteroid_avgJS':
         path_model = "./ANN_tf/"
-        ANN_tf = ANN(config, path_model = path_model+'asteroid/Model_asteroids_DNN/', path_std = path_std)
+        ANN_tf = ANN(config, path_model = path_model+'asteroid/Model_asteroids_DNN/', path_std = path_std, pred_type = 'a')
         ANN_tf.load_model_fromFile(path_model+'asteroid/Model_asteroids_DNN/')
         return ANN_tf
     else: # Sun, Jupiter and Saturn or other cases with 1 network
         path_model = "./ANN_tf/"
         config['output_dim'] = 'a'
         config['bodies'] = 2 # Case with SJS
-        ANN_tf = ANN(config, path_model = path_model+'JS/Model_JS_DNN/', path_std = path_std)
+        ANN_tf = ANN(config, path_model = path_model+'JS/Model_JS_DNN/', path_std = path_std, pred_type = 'a')
         ANN_tf.load_model_fromFile(path_model+'JS/Model_JS_DNN/')
         return ANN_tf
     
@@ -194,7 +194,7 @@ def add_particles(sim, asateroids, asteroids_extra):
         sim.particles.add(mass =m_a_e[j], a=a_a_e[j] , e=0.1, i=0.0, f= f_a[j])
     return sim
 
-def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name):
+def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name, R):
     """
     simulate: run integration using WH, HNN, and DNN
     INPUTS:
@@ -240,7 +240,7 @@ def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name):
     sim2 = WisdomHolman(hnn=nih_model, CONST_G=sr.G, \
                         accel_file_path = "./Experiments/sun_jupiter_saturn/accelerations_ANN.txt",\
                         flag = flag, \
-                        multiple_nets = multiple)
+                        multiple_nets = multiple, R= R)
     sim2 = add_particles(sim2, asteroids, asteroids_extra)
 
     t0_nn = time.time()
@@ -268,7 +268,7 @@ def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name):
     sim3 = WisdomHolman(hnn=nDNN_model, CONST_G=sr.G, \
                         accel_file_path = "./Experiments/sun_jupiter_saturn/accelerations_DNN.txt",\
                         flag = flag, \
-                        multiple_nets = multiple)
+                        multiple_nets = multiple, R = R)
     # sim.integrator = 'WisdomHolman'
     sim3 = add_particles(sim3, asteroids, asteroids_extra)
 
@@ -421,24 +421,26 @@ def plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra):
     # Add names of asteroids
     names = ['Sun', 'Jupiter', 'Saturn']
     for j in range(asteroids):
-        names.append("Asteroid%i"%(j+1))
+        names.append("Asteroid %i"%(j+1))
 
-    labelsize = 20
-    titlesize = 22
+    labelsize = 22
+    titlesize = 24
     colors = [color[8], color[9], color[3], color[6], color[0], color[10], color[5], color[7], color[1], color[11]]
     line = ['-', '--', '-.', ':', '-', '--', '-.', ':','-', '--', '-.', ':','-', '--', '-.', ':']
     lnwidth = 3
     for i in range(1, data_nih['x'].shape[1]):
         # coordinates in the first column
-        axes[0,1].set_title("Numerical integrator result: %.3f s"%(t_num), fontsize = titlesize)
-        axes[1,1].set_title("Hamiltonian Neural Network result: %.3f s"%(t_nn), fontsize = titlesize)
-        axes[2,1].set_title("Deep Neural Network result: %.3f s"%(t_dnn), fontsize = titlesize)
+        axes[0,1].set_title("Numerical integrator result: %.1f s"%(t_num), fontsize = titlesize)
+        axes[1,1].set_title("Hamiltonian Neural Network result: %.1f s"%(t_nn), fontsize = titlesize)
+        axes[2,1].set_title("Deep Neural Network result: %.1f s"%(t_dnn), fontsize = titlesize)
 
         axes[0,0].plot(data_nb['x'][:,i], data_nb['y'][:,i], linestyle = line[i], linewidth = lnwidth, color = colors[i], label=names[i])
         axes[0,0].axis('equal')
         axes[0,0].set_xlabel('$x$',fontsize = labelsize)
         axes[0,0].set_ylabel('$y$',fontsize = labelsize)
-        axes[0,0].legend(loc = 'upper right', fontsize = 16, framealpha = 0.9)
+        # axes[0,0].legend(loc = 'upper right', fontsize = 16, framealpha = 0.9)
+        axes[0,0].legend(bbox_to_anchor=(-0.85, 1.05), loc = 'upper left', fontsize = 20, framealpha = 0.9)
+        
         axes[1,0].plot(data_nih['x'][:,i], data_nih['y'][:,i], linestyle = line[i],linewidth = lnwidth, color = colors[i], label=names[i])
         axes[1,0].axis('equal')
         axes[1,0].set_ylabel('$y$',fontsize = labelsize)
@@ -467,24 +469,23 @@ def plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra):
 
     axes[1,2].plot(time, sim2.energy, linestyle = '-',  color = color[3],alpha=1, label= 'Error with WH-HNN')
     axes[1,2].plot(time, sim.energy, linestyle = '-',  color = color[9],alpha=1, label= 'Error with WH')
-    axes[1,2].legend(loc = 'upper left', fontsize = 18, framealpha = 0.9)
+    axes[1,2].legend(loc = 'lower left', fontsize = 18, framealpha = 0.9)
     axes[1,2].set_ylabel('$dE/E_0$',fontsize = labelsize)
     axes[1,2].ticklabel_format(useOffset=False)
     axes[1,2].set_xlabel('$t$ [years]',fontsize = labelsize)
 
     axes[2,2].plot(time, sim3.energy, alpha=1, linestyle = '-',  color = color[3],label= 'Error with WH-DNN')
     axes[2,2].plot(time, sim.energy, alpha=1, linestyle = '-',  color = color[9], label= 'Error with WH')
-    axes[2,2].legend(loc = 'upper left', fontsize = 18, framealpha = 0.9)
+    axes[2,2].legend(loc = 'lower right', fontsize = 18, framealpha = 0.9)
     axes[2,2].set_ylabel('$dE/E_0$',fontsize = labelsize)
     axes[2,2].ticklabel_format(useOffset=False)
     axes[2,2].set_xlabel('$t$ [years]',fontsize = labelsize)
 
     for i in range(3):
         for j in range(3):
-            axes[i,j].tick_params(axis='both', which='major', labelsize=16)
+            axes[i,j].tick_params(axis='both', which='major', labelsize=17)
 
     plt.tight_layout()
-    plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.png' % t_end)
     plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.pdf' % t_end)
     plt.show()
 
@@ -732,6 +733,69 @@ def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelera
     plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagcomparison.png' % t_end)
     plt.show()
 
+def plot_accel_flagvsR(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, 
+                flags_i, t, asteroids, asteroids_extra, R):
+    """
+    plot_accelerations_flagvsnoflag: plot accelerations predicted with WH, HNN flag and HNN no flag
+    INPUTS:
+        sim, sim2, sim3: simulations for WH, HNN flag and HNN no flag
+    """
+    # Add names of asteroids
+    names = ['Jupiter', 'Saturn']
+    for j in range(asteroids):
+        names.append("Asteroid %i"%(j+1))
+
+    h = 1e-1
+    x = np.arange(0, len(accelerations_ANN_noflag)*h, h)
+    # x2 = np.copy(x)
+
+    asteroids_plot = asteroids+asteroids_extra
+    
+    fig, axes = plt.subplots(1,3, figsize=(15,6))
+    fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.4, wspace= 0.25)
+
+    a_WH = np.zeros(len(accelerations_ANN_noflag))
+    a_ANN = np.zeros(len(accelerations_ANN_noflag))
+    a_DNN = np.zeros(len(accelerations_ANN_flag))
+        
+    body = 3
+    for item in range(len(accelerations_ANN_noflag)):
+        a_WH[item] = np.linalg.norm(accelerations_WH[item, 3*body:3*body+3])
+        a_ANN[item] = np.linalg.norm(accelerations_ANN_noflag[item, 3*body:3*body+3])
+        a_DNN[item] = np.linalg.norm(accelerations_ANN_flag[item, 3*body:3*body+3])
+    accel = [a_WH, a_ANN, a_DNN]
+        
+    for plot in range(3):
+        axes[plot].plot(x, accel[plot], color = color[3], label = 'R = %0.1f'%R[plot])
+    # axes[1].plot(x, a_ANN, color = color[9], label = 'Without flags')
+    # axes[2].plot(x, a_DNN, color = color[5], label = 'With flags')
+        flags = flags_i[plot]
+        index_DNN = np.where(flags[:, 3] == 0)[0]
+        x2_DNN = np.copy(x)
+        x2_DNN = np.delete(x2_DNN, index_DNN)
+        axes[plot].scatter(x2_DNN, np.delete(accel[plot], index_DNN), color = color[5], label = 'Flags')
+        # axes[plot].set_title(names[plot-1], fontsize = 24)
+    
+        axes[plot].set_xlabel('$t$ (yr)', fontsize = 22)
+        axes[plot].annotate("Flags: %i / %i"%(np.count_nonzero(flags[:, 3]), len(accelerations_ANN_flag)), \
+            xy =  (x[int(len(x)//2)]*1.27, max((accel[plot]))*0.92), fontsize = 15)
+    
+        axes[plot].grid(alpha = 0.5)        
+        ticks = -np.log10(axes[plot].get_yticks())
+        dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+        axes[plot].set_yticklabels(np.round(trunc(axes[plot].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+        axes[plot].set_xticklabels(np.round(trunc(axes[plot].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+        axes[plot].legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
+
+    axes[0].set_ylabel('a ($au/yr^2$)', fontsize = 22)
+    # axes[0,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
+    # axes[1,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
+    # axes[2,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
+
+    # plt.tight_layout()
+    plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagR.png' % t_end)
+    plt.show()
+
 
 def load_model_asteroids():
     """
@@ -745,13 +809,17 @@ def load_model_asteroids():
     path_std = "./dataset/"
 
     if multiple == 'Asteroid_JS':
-        path_model = "./ANN_tf/trained_nets/"
+        path_model = "./ANN_tf/"
         Nets = []
-        ANN_tf = ANN_JS(config, path_model = path_model+'Model_JS/', path_std = path_std)
-        ANN_tf.load_model_fromFile(path_model+'Model_JS/')
+
+        config['bodies'] = 2 # Case with SJS
+        ANN_tf = ANN(config, path_model = path_model+'JS/Model_JS/', path_std = path_std)
+        ANN_tf.load_model_fromFile(path_model+'JS/Model_JS/')
         Nets.append(ANN_tf)
-        ANN_tf = ANN(config, path_model = path_model+'Model_asteroids/', path_std = path_std)
-        ANN_tf.load_model_fromFile(path_model+'Model_asteroids/')
+
+        config['bodies'] = 3 # Case with SJSa
+        ANN_tf = ANN(config, path_model = path_model+'asteroid/Model_asteroids/', path_std = path_std)
+        ANN_tf.load_model_fromFile(path_model+'asteroid/Model_asteroids/')
         Nets.append(ANN_tf)
         return Nets
 
@@ -764,9 +832,10 @@ def load_model_asteroids():
             Nets.append(ANN_tf)
         return Nets
     else:
-        path_model = "./ANN_tf/trained_nets/"
-        ANN_tf = ANN(config, path_model = path_model+'Model_JS/', path_std = path_std)
-        ANN_tf.load_model_fromFile(path_model+'Model_JS/')
+        path_model = "./ANN_tf/"
+        config['bodies'] = 2 # Case with SJS
+        ANN_tf = ANN(config, path_model = path_model+'JS/Model_JS/', path_std = path_std)
+        ANN_tf.load_model_fromFile(path_model+'JS/Model_JS/')
         return ANN_tf
 
 def run_asteroids():
@@ -788,7 +857,8 @@ def run_asteroids():
     h = 1.0e-1
 
     # asteroids = [5, 10, 20, 30, 50, 70, 90, 100, 150, 200]
-    asteroids = [1000, 10000]
+    asteroids = [3, 4]
+    # asteroids = [500, 1000, 2000]
     t_num = np.zeros((len(asteroids), 3))
     e_energy = np.zeros((len(asteroids), 3, int(t_end//h)+1))
     for test in range(len(asteroids)):
@@ -909,37 +979,47 @@ def plot_asteroids():
         for dset in h5f.keys():
             data[dset] = h5f[dset][()]
 
-    # with h5py.File("./Experiments/AsteroidVsTime/asteroids_timeEnergy_2.h5", 'r') as h5f:
-    #     data2 = {}
-    #     for dset in h5f.keys():
-    #         data2[dset] = h5f[dset][()]
-    # t_num = np.stack((data['time'], data2['time']), axis = 0)
-    # e_energy = np.stack((data['energy'], data2['energy']), axis = 0)
-    # h, t_end = np.stack((data['settings'], data2['settings']), axis = 0)
-    # asteroids = np.stack((data['asteroids'], data2['asteroids']), axis = 0)
+    with h5py.File("./Experiments/AsteroidVsTime/asteroids_timeEnergy_2.h5", 'r') as h5f:
+        data2 = {}
+        for dset in h5f.keys():
+            data2[dset] = h5f[dset][()]
 
-    t_num = data['time']
-    e_energy = data['energy']
+    t_num = np.vstack((data['time'], data2['time']))
+    e_energy = np.vstack((data['energy'], data2['energy']))
+    # h, t_end = np.vstack((data['settings'], data2['settings']), axis = 0)
+    asteroids = np.append(data['asteroids'], data2['asteroids'] )
+
+    # t_num = data['time']
+    # e_energy = data['energy']
     h, t_end = data['settings']
-    asteroids = data['asteroids']
+    # asteroids = data['asteroids']
 
     ########################################################
     #### Plots together
     ########################################################
-    fig, axes = plt.subplots(1,2, figsize=(18,6), gridspec_kw={'width_ratios': [3, 1]})
+    fig, axes = plt.subplots(1,2, figsize=(16,6), gridspec_kw={'width_ratios': [1.7, 1]})
+    fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.5, wspace= 0.55)
+
     axes[0].plot(asteroids, t_num[:,0], color = color[3],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
     axes[0].plot(asteroids, t_num[:,1], color = color[9],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
     axes[0].plot(asteroids, t_num[:,2], color = color[5],  linestyle='--', linewidth = 2, marker = '^', markersize = 10,label = 'WH-HNN')
+    t_1 = t_num[0, 0] / ((asteroids[0]+2) * np.log(asteroids[0]+2))  # First time is for 5 asteroids (+2 planets). time per operation
+    axes[0].plot(asteroids, t_1 *((asteroids+2) * np.log(asteroids+2)) , color = 'black', linewidth = 3, alpha = 0.5, linestyle = '--', label = 'N log(N)' )
     axes[0].set_xlabel('Number of asteroids', fontsize = 20)
-    axes[0].set_ylabel('Computation time', fontsize = 20)
+    axes[0].set_ylabel('Computation time (s)', fontsize = 20)
+    axes[0].set_xscale('log')
+    axes[0].set_yscale('log')
     axes[0].legend(fontsize = 20)
     axes[0].grid(alpha = 0.5)
 
-    axes[1].plot(asteroids, e_energy[:,0,-1]-e_energy[:,0,0], color = color[3], linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
-    axes[1].plot(asteroids, e_energy[:,1,-1]-e_energy[:,1,0], color = color[9],  linestyle='-',  linewidth = 2, marker = 'x', markersize = 10,label = 'HNN')
-    axes[1].plot(asteroids, e_energy[:,2,-1]-e_energy[:,2,0], color = color[5], linestyle='--',   linewidth = 2, marker = '^', markersize = 10,label = 'WH-HNN')
+    e_rel = abs( ( np.sum(e_energy[:,0,-10:], axis = 1)/10 - e_energy[:,0,0])  / e_energy[:,0,0] )
+    axes[1].plot(asteroids, e_rel, color = color[3], linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
+    # axes[1].plot(asteroids, abs((e_energy[:,0,-1]-e_energy[:,0,0])/ e_energy[:,0,0]), color = color[3], linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
+    axes[1].plot(asteroids, abs((e_energy[:,1,-1]-e_energy[:,1,0])/ e_energy[:,1,0]), color = color[9],  linestyle='-',  linewidth = 2, marker = 'x', markersize = 10,label = 'HNN')
+    axes[1].plot(asteroids, abs((e_energy[:,2,-1]-e_energy[:,2,0])/ e_energy[:,2,0]), color = color[5], linestyle='--',   linewidth = 2, marker = '^', markersize = 10,label = 'WH-HNN')
     axes[1].set_xlabel('Number of asteroids', fontsize = 20)
-    axes[1].set_ylabel('Mean energy error of last 10 steps', fontsize = 20)
+    axes[1].set_ylabel('Relative mean energy error of last 10 steps', fontsize = 20)
+    axes[1].set_yscale('symlog', linthresh = 0.00004)
     axes[1].legend(fontsize = 20)
     axes[1].grid(alpha = 0.5)
 
@@ -1001,14 +1081,75 @@ def plot_energyvsH(sim, sim2):
     plt.savefig('./Experiments/sun_jupiter_saturn/HvsE_%dyr.png' % t_end)
     plt.show()
 
+def compute_predError(t_end, h, asteroids, asteroids_extra):
+    """
+    compute_predError
+    """
+    # Run numerically
+    sim = WisdomHolman(CONST_G=sr.G, accel_file_path = "./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
+    sim = add_particles(sim, asteroids, asteroids_extra)
+
+    sim.output_file = './Experiments/sun_jupiter_saturn/sun_jupiter_saturn_nb'+'_phaseError'+'.hdf5'
+    sim.integrator_warmup()
+    sim.h = h
+    sim.acceleration_method = 'numpy'
+    sim.buf.recorder.set_monitored_quantities(['a', 'ecc', 'inc', 'x', 'y', 'z'])
+    sim.buf.recorder.start()
+    sim.integrate(t_end, nih=False)
+    sim.buf.flush()
+    sim.stop()
+
+    sim.buf.recorder.data.keys()
+
+    hnn = load_model(multiple)
+
+    # For each time-step, predict accelerations
+    iters = np.shape(sim.coord)[0]
+    accel_pred = np.zeros((iters, 9))
+    masses = sim.particles.masses
+    nbodies = len(masses)
+
+    input_JS = np.zeros((iters, 8))
+    theta_JS = np.zeros((iters, 2))
+    for iterstep in range(iters):
+
+        # Predict acceleration with HNN
+        q = sim.coord[iterstep][0:3*nbodies].reshape(nbodies, 3)
+        jacobi_input = np.hstack((np.reshape(masses[1:], (-1,1)), q[1:,:]))
+        input_JS[iterstep, :] = jacobi_input[0:2].flatten()
+
+        # Calculate phase
+        theta_JS[iterstep, 0] = np.arctan2(q[1, 1], q[1, 0])
+        theta_JS[iterstep, 1] = np.arctan2(q[2, 1], q[2, 0])
+
+    
+    accel_pred[:, 3:] = hnn.predict(input_JS)
+
+
+    # Calculate prediction error
+    E_accel = sim.dcoord_a - accel_pred
+
+    return theta_JS, E_accel
+
+
+def plot_errorPhaseOrbit(theta_JS, E_accel):
+    E_accel_norm = np.linalg.norm(E_accel, axis = 1)
+    plt.scatter(theta_JS[:, 0], theta_JS[:,1], c = E_accel_norm, cmap = 'viridis')
+    plt.xlabel(r'$\theta_J$', fontsize = 22)
+    plt.ylabel(r'$\theta_S$', fontsize = 22)
+    plt.colorbar()
+    plt.savefig('./Experiments/error_phase/phasemap.png' % t_end)
+
+    plt.show()
+
 if __name__ == "__main__":
     h = 1e-1
-    # multiple = 'JS'
-    multiple = 'Asteroid_JS'
+    multiple = 'JS'
+    # multiple = 'Asteroid_JS'
     
-    run = 2
+    run = 5
     if run == 1:
-        t_end = 25
+        t_end = 5000
         if multiple == 'JS':
             asteroids = 0
             asteroids_extra = 0
@@ -1018,11 +1159,11 @@ if __name__ == "__main__":
         ##########################################
         # General
         ##########################################
-        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '')
-        if multiple == 'JS':
-            plot_energyvsH(sim, sim2)
+        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)
+        # if multiple == 'JS':
+        #     plot_energyvsH(sim, sim2)
         # plot_general(sim, sim2, sim3, t, asteroids, asteroids_extra)
-        # plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra)
+        plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra)
         # plot_accelerations(sim, sim2, sim3, typenet = multiple)
     
     elif run == 2: 
@@ -1032,13 +1173,13 @@ if __name__ == "__main__":
         ##########################################
         # Test flag vs no flag
         ##########################################
-        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '')
+        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)
 
         accelerations_WH = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
         accelerations_ANN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txt")
         accelerations_DNN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txt")
 
-        sim, sim2_f, sim3_f, t_f = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '2')
+        sim, sim2_f, sim3_f, t_f = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '2', 0.3)
 
         # plot_general_flagvsnoflag(sim, sim2, sim2_f, [t, t_f], asteroids, asteroids_extra)
         
@@ -1052,10 +1193,68 @@ if __name__ == "__main__":
         plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, \
                     flags, [t, t_f], asteroids, asteroids_extra)
 
-
     elif run == 3:
+        t_end = 30
+        asteroids = 2
+        asteroids_extra = 0
+        ##########################################
+        # Test flag vs no flag
+        ##########################################
+        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)
+
+        accelerations_WH = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
+        # accelerations_ANN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txt")
+        # accelerations_DNN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txt")
+
+        flags_R = [0.1, 0.3, 0.7, 1.2]
+        flag_n = np.zeros((len(flags_R),1+asteroids +3))
+        flag_dnn = np.zeros((len(flags_R),1+asteroids +3))
+        flag_n[:, 0] = flags_R
+        flag_dnn[:, 0] = flags_R
+
+        accel_i = list()
+        flags_i = list()
+        accel_i_DNN = list()
+        flags_i_DNN = list()
+        for flag_R in range(len(flags_R)):
+            sim, sim2_f, sim3_f, t_f = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '2', flags_R[flag_R])
+
+            accelerations_WH = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
+            accelerations_ANN_flag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txt")
+            accelerations_DNN_flag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txt")
+            flags = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txtflag_list.txt")
+            flags_DNN = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txtflag_list.txt")
+
+            flag_n[flag_R, 1:] = np.sum(flags, axis = 0 )
+            flag_dnn[flag_R, 1:] = np.sum(flags_DNN, axis = 0 )
+
+            accel_i.append(accelerations_ANN_flag)
+            flags_i.append(flags)
+
+            accel_i_DNN.append(accelerations_DNN_flag)
+            flags_i_DNN.append(flags_DNN)
+            # plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, \
+            #         flags, [t, t_f], asteroids, asteroids_extra)
+
+        np.savetxt("./Experiments/flagvsnoflag/flagvsR.txt", flag_n)
+        np.savetxt("./Experiments/flagvsnoflag/flagvsR_DNN.txt", flag_dnn)
+        
+        plot_accel_flagvsR(accel_i[0], accel_i[1], accel_i[2], \
+                    flags_i, [t, t_f], asteroids, asteroids_extra, flags_R)
+
+        plot_accel_flagvsR(accel_i_DNN[0], accel_i_DNN[1], accel_i_DNN[2], \
+                    flags_i_DNN, [t, t_f], asteroids, asteroids_extra, flags_R)
+
+    elif run == 4:
         ##########################################
         # Asteroids vs time and energy
         ##########################################
         # run_asteroids()
         plot_asteroids()
+
+    elif run == 5:
+        t_end = 1000
+        asteroids = 0
+        asteroids_extra = 0
+        theta_JS, E_accel = compute_predError(t_end, h, asteroids, asteroids_extra)
+        plot_errorPhaseOrbit(theta_JS, E_accel)

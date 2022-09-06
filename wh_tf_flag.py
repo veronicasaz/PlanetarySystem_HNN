@@ -19,13 +19,14 @@ class WisdomHolman(Integrator):
     the kick steps are done either numerically or through a Hamiltonian neural network (HNN).
     """
 
-    def __init__(self, particles=None, buffer=None, CONST_G=4*np.pi**2, CONST_C=0.0, hnn=None, accel_file_path = None, flag = False, multiple_nets = False):
+    def __init__(self, particles=None, buffer=None, CONST_G=4*np.pi**2, CONST_C=0.0, hnn=None, accel_file_path = None, flag = False, multiple_nets = False, R = None):
         super(self.__class__, self).__init__(particles, buffer, CONST_G, CONST_C)
         
         self.hnn = hnn
         self.training_mode = False 
         self.coord = []
         self.dcoord = []
+        self.dcoord_a = []
         self.energy = []
         self.__particle_init = None  # initial states of the particle 
         self.__energy_init = 0.0
@@ -36,6 +37,10 @@ class WisdomHolman(Integrator):
         self.accel_file_path_3 = accel_file_path + "H.txt"
         self.flag = flag
         self.multiple_nets = multiple_nets
+        if R == None:
+            self.R = 0.3
+        else:
+            self.R = R
         
 
     def create_logger(self, name='WH-nih', log_level=logging.DEBUG):
@@ -64,6 +69,7 @@ class WisdomHolman(Integrator):
         self._particles = copy.deepcopy(self.__particle_init)
         self.coord = []
         self.dcoord = []
+        self.dcoord_a = []
         self.energy = []
 
 
@@ -112,9 +118,10 @@ class WisdomHolman(Integrator):
             self.logger.info('t = %f, dE/E0 = %g, N = %d' % (t_current, rel_energy_error, self.particles.N))
             # if self.training_mode:
                 # save training data 
-            self.coord.append(helio)
-            self.dcoord.append(np.append(helio[3*self.particles.N:], accel))
+            # self.coord.append(helio)
+            # self.dcoord.append(np.append(helio[3*self.particles.N:], accel))
             self.store_state()
+
 
         if self.accel_file_path != None:
             np.savetxt(self.accel_file_path, accelerations_list)
@@ -289,12 +296,14 @@ class WisdomHolman(Integrator):
         # Convert from heliocentric to Jacobi for drifting:
         jacobi = WisdomHolman.helio2jacobi(helio, masses, nbodies)
 
+
         # Drift
         jacobi = WisdomHolman.wh_drift(jacobi, dt, masses, nbodies, G)
 
+        self.coord.append(jacobi)
+
         # Convert from Jacobi to heliocentric for kicking:
         helio = WisdomHolman.jacobi2helio(jacobi, masses, nbodies)
-
 
         # Compute acceleration at t + dt:
         flag_list = np.zeros(nbodies)
@@ -327,7 +336,8 @@ class WisdomHolman(Integrator):
                     accel_norm = np.linalg.norm(accel_2d, axis = 1).flatten()
                     accel_norm_prev = np.linalg.norm(accel_2d_prev, axis = 1).flatten()
                     # idx_bad = np.where(dif_accel/abs(1e-11 + accel_norm_prev + accel_norm) >  0.3)[0]
-                    idx_bad = np.where(np.log10(dif_accel) >  np.log10(0.3*accel_norm_prev))[0]
+                    # idx_bad = np.where(np.log10(dif_accel) >  np.log10(self.R*accel_norm_prev))[0]
+                    idx_bad = np.where(dif_accel/(accel_norm_prev+1e-11) >  self.R)[0]
                     flag_list[idx_bad] = np.ones(len(idx_bad)) # save which ones are bad
                     
                     helio_pos = helio[0:3*nbodies].reshape((nbodies, 3))
@@ -378,10 +388,19 @@ class WisdomHolman(Integrator):
                 output_n = np.array(self.hnn.predict(input_nn))[0]
                 accel = np.zeros(np.shape(accel)) # include acceleration =0 of central body
                 accel[3:] = output_n
-                H_i = self.hnn.predict(input_nn, pred_type = 'H')[0]
+                # self.hnn.pred_type = 'H'
+                # H_i = self.hnn.predict(input_nn)[0]
 
                 # Check if prediction by ANN is valid
-                if self.flag == True and np.any( abs(np.log10(abs(accel_prev)+1e-11) - np.log10(abs(accel)+1e-11)) >  1.5):
+                accel_2d = accel.reshape((nbodies, 3))
+                accel_2d_prev = accel_prev.reshape((nbodies, 3))
+                dif_accel = np.linalg.norm( (accel_prev-accel).reshape((nbodies, 3)), axis = 1).flatten()
+                accel_norm = np.linalg.norm(accel_2d, axis = 1).flatten()
+                accel_norm_prev = np.linalg.norm(accel_2d_prev, axis = 1).flatten()
+                # idx_bad = np.where(dif_accel/abs(1e-11 + accel_norm_prev + accel_norm) >  0.3)[0]
+                # idx_bad = np.where(np.log10(dif_accel) >  np.log10(self.R*accel_norm_prev))[0]
+                # (dif_accel/(accel_norm_prev+1e-11) >  self.R
+                if self.flag == True and np.any(dif_accel/(accel_norm_prev+1e-11) >  self.R):
                     accel = WisdomHolman.compute_accel(helio, jacobi, masses, nbodies, G)
                     flag_list = np.ones(len(flag_list))
             else:
@@ -402,7 +421,7 @@ class WisdomHolman(Integrator):
                        
         # Kick:
         helio = WisdomHolman.wh_kick(helio, dt / 2, masses, nbodies, accel)
-
+        self.dcoord_a.append(accel)
         return helio, accel, flag_list, H_i
 
     @staticmethod
