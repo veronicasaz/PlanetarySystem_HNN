@@ -397,7 +397,7 @@ def plot_general(sim, sim2, sim3, t, asteroids, asteroids_extra):
     plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.pdf' % t_end)
     plt.show()
 
-def plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra):
+def plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra, typePlot):
     """
     plot_general: plot simulation with WH, HNN and DNN only 3 columns
     INPUTS:
@@ -476,7 +476,10 @@ def plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra):
 
     axes[2,2].plot(time, sim3.energy, alpha=1, linestyle = '-',  color = color[3],label= 'Error with WH-DNN')
     axes[2,2].plot(time, sim.energy, alpha=1, linestyle = '-',  color = color[9], label= 'Error with WH')
-    axes[2,2].legend(loc = 'lower right', fontsize = 18, framealpha = 0.9)
+    if typePlot == 'JS':
+        axes[2,2].legend(loc = 'upper left', fontsize = 18, framealpha = 0.9)
+    else:
+        axes[2,2].legend(loc = 'lower right', fontsize = 18, framealpha = 0.9)
     axes[2,2].set_ylabel('$dE/E_0$',fontsize = labelsize)
     axes[2,2].ticklabel_format(useOffset=False)
     axes[2,2].set_xlabel('$t$ [years]',fontsize = labelsize)
@@ -487,6 +490,7 @@ def plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra):
 
     plt.tight_layout()
     plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.pdf' % t_end)
+    plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.png' % t_end)
     plt.show()
 
 def plot_accelerations(sim, sim2, sim3, typenet = "Asteroid_JS"):
@@ -1148,10 +1152,10 @@ def plot_errorPhaseOrbit(theta_JS, E_accel):
 
 if __name__ == "__main__":
     h = 1e-1
-    # multiple = 'JS'
-    multiple = 'Asteroid_JS'
+    multiple = 'JS'
+    # multiple = 'Asteroid_JS'
     
-    run = 4
+    run = 1
     if run == 1:
         t_end = 5000
         if multiple == 'JS':
@@ -1164,10 +1168,10 @@ if __name__ == "__main__":
         # General
         ##########################################
         sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)
-        if multiple == 'JS':
-            plot_energyvsH(sim, sim2)
+        # if multiple == 'JS':
+        #     plot_energyvsH(sim, sim2)
         # plot_general(sim, sim2, sim3, t, asteroids, asteroids_extra)
-        # plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra)
+        plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra, typePlot = multiple)
         # plot_accelerations(sim, sim2, sim3, typenet = multiple)
     
     elif run == 2: 
