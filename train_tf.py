@@ -61,15 +61,15 @@ def get_data(config, name = None, plot = False):
 
     # Plot
     if plot == True: # choose plots to make
-        # plot_distribution(data2['coords'], data2['dcoords'], '', name)
-        # plot_distribution(data2['test_coords'], data2['test_dcoords'], '_test', name)
+        plot_distribution(data2['coords'], data2['dcoords'], '', name)
+        plot_distribution(data2['test_coords'], data2['test_dcoords'], '_test', name)
         # plot_pairplot(data2, name)
         # plot_correlation(data2, name)
         # plot_distance(data2, name)
         # plot_distance3D(data2, name)
         # plot_covariance_samples(data2, name)
         # plot_covariance(data2, name)
-        plot_trajectory(data2, name)
+        # plot_trajectory(data2, name)
 
     return data2
 
@@ -198,14 +198,14 @@ if __name__ == "__main__":
     settings = {**settings_dataset, **settings}
 
     # Choose case
-    name = 'JS'
-    # name = 'asteroid'
+    # name = 'JS'
+    name = 'asteroid'
 
     ####### GET DATA ###########
     # Only 1 of the 2 necessary
     # data = process_data(settings) # comment if not necessary. Only needed once
     data = get_data(settings, plot = False, name = name+'/')
-    
+
     ####### TRAIN ##########
     if name == 'JS':
         settings['bodies'] = 2 # Case with SJS

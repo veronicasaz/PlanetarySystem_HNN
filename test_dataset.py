@@ -62,7 +62,8 @@ def load_dataset(config, settings_file_path, data, path_model = None, drdv = Fal
     if drdv == False:
         test_dxdt_pred = ANN_tf.predict(test_x, std = False)
     else:
-        test_dxdt_pred = ANN_tf.predict(test_x, std = False, pred_type = 'a')
+        ANN_tf.pred_type = 'a'
+        test_dxdt_pred = ANN_tf.predict(test_x, std = False)
     # else:
     #     test_dxdt_pred = ANN_tf.predict(test_x, std = False, pred_type = 'a')
     return test_x, test_dxdt_pred , test_dxdt
@@ -134,16 +135,16 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
     """
     subplot2 = 3
     subplot1 = np.shape(y_pred)[1]//subplot2
-    fig = plt.figure(figsize = (17,17))
+    fig = plt.figure(figsize = (20,15))
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
-    plt.subplots_adjust(wspace = 0.6, hspace=0.6)
+    plt.subplots_adjust(wspace = 0.5, hspace=0.7)
 
     xlabel = [r'$a_x$', r'$a_y$', r"$a_z$"]
     title = ['Jupiter', 'Saturn', 'Asteroids']
     for sbu in range(subplot1):
         # subfigs[sbu].suptitle(title[sbu], fontsize = 18)
         # subfigs[sbu].subplots_adjust(wspace = 0.5, hspace = 0.1, top = 1.0 -(sbu+0.02)/subplot1, bottom = 1.0 -(sbu+0.95)/subplot1)
-        subfigs[sbu].subplots_adjust(wspace = 0.5, top = 0.95, bottom = 0.2)
+        subfigs[sbu].subplots_adjust(left = 0.07, right = 0.82, wspace = 0.4, top = 0.95, bottom = 0.2)
         ax = subfigs[sbu].subplots(nrows=1, ncols=subplot2)
 
         for sbu2 in range(subplot2):
@@ -178,7 +179,7 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
             ax[sbu2].grid(alpha = 0.2)
 
         if sbu == 0:
-            ax[0].legend(fontsize = 20, framealpha = 0.9, loc = 'upper center')
+            ax[2].legend(fontsize = 20, framealpha = 0.9, bbox_to_anchor = (0.98,1.0))
 
     plt.savefig(path_figure+'Error_HDN.png', dpi = 100)
     plt.show() 

@@ -65,7 +65,7 @@ def plot_tanh_log():
     ax.tick_params(axis='both', which='major', labelsize=18)
     ax.tick_params(axis='both', which='minor', labelsize=15)
     # plt.legend(fontsize = 18, loc= 'upper left')
-    plt.legend(fontsize = 18, bbox_to_anchor=(1.0, 1.0) )
+    plt.legend(fontsize = 20, bbox_to_anchor=(1.0, 1.0) )
     
     plt.tight_layout()
     # plt.grid(alpha = 0.5)

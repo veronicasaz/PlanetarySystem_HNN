@@ -534,7 +534,7 @@ def plot_optim(data, N):
     
     subplot2 = 1
     subplot1 = 1
-    fig, ax = plt.subplots(subplot1, subplot2, figsize=(15,8))
+    fig, ax = plt.subplots(subplot1, subplot2, figsize=(12,6))
     
     # cm = plt.cm.get_cmap('jet')
     # sc = ax.scatter(params[:, 1], params[:, 2], s = 60, marker = 'o', c = loss[:, 0], norm=plc.LogNorm(), cmap =  cm)
@@ -544,10 +544,6 @@ def plot_optim(data, N):
     plt.subplot(subplot1, subplot2, 1)
     index = np.where(D_samples[:, 0] == np.min(D_samples[:, 0]))[0]
     index_val = np.where(D_samples[:, 1] == np.min(D_samples[:, 1]))[0]
-    print(index, index_val)
-    print(D_samples[index,:])
-    print(D_samples[index, 0], D_samples[index, 1])
-    print(D_samples[index_val, 0], D_samples[index_val, 1])
     # plt.plot(D_samples[:, 2], D_samples[:, 0], marker = 'o', label = 'train loss')
     # plt.plot(D_samples[:, 2], D_samples[:, 1], marker = 'x', label = 'val loss')
     plt.scatter(D_samples[:, 0], D_samples[:, 1], s = 120, marker = 'o' , color = color[3])
@@ -559,7 +555,7 @@ def plot_optim(data, N):
     plt.scatter(D_samples[index_val, 0], D_samples[index_val, 1], s = 250, color =color[5], marker = 's' , label = label2)
 
     # plt.title('Results of hyperparameter optimization', fontsize = 22)
-    legend = plt.legend(fontsize = 23, bbox_to_anchor=(1.0, 1.0))
+    legend = plt.legend(fontsize = 21, bbox_to_anchor=(1.0, 1.0))
     # legend = plt.legend(fontsize = 12, title = 'Number of training samples, layers, neurons per layer, ratio of neurons, initial learning rate, \nlearning rate decay, learning rate steps')
     # legend.get_title().set_fontsize('15')
     plt.grid(alpha = 0.5)

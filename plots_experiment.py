@@ -856,8 +856,10 @@ def run_asteroids():
     t_end = 20
     h = 1.0e-1
 
-    # asteroids = [5, 10, 20, 30, 50, 70, 90, 100, 150, 200]
-    asteroids = [3, 4]
+    savedata = dict()
+
+    asteroids = [5, 10, 20, 30, 50, 70, 90, 100, 150, 200, 500, 1000, 2000]
+    # asteroids = [3, 4]
     # asteroids = [500, 1000, 2000]
     t_num = np.zeros((len(asteroids), 3))
     e_energy = np.zeros((len(asteroids), 3, int(t_end//h)+1))
@@ -959,15 +961,14 @@ def run_asteroids():
 
         t_num[test, 2] = time.time() - t0_nn
     
-    savedata = dict()
-    savedata['time'] = t_num
-    savedata['energy'] = e_energy
-    savedata['settings'] = [h, t_end]
-    savedata['asteroids'] = asteroids
+        savedata['time'] = t_num
+        savedata['energy'] = e_energy
+        savedata['settings'] = [h, t_end]
+        savedata['asteroids'] = asteroids
 
-    with h5py.File("./Experiments/AsteroidVsTime/asteroids_timeEnergy.h5", 'w') as h5f:
-        for dset in savedata.keys():
-            h5f.create_dataset(dset, data=savedata[dset], compression="gzip")
+        with h5py.File("./Experiments/AsteroidVsTime/asteroids_timeEnergy.h5", 'w') as h5f:
+            for dset in savedata.keys():
+                h5f.create_dataset(dset, data=savedata[dset], compression="gzip")
 
 def plot_asteroids():
     """
@@ -979,20 +980,20 @@ def plot_asteroids():
         for dset in h5f.keys():
             data[dset] = h5f[dset][()]
 
-    with h5py.File("./Experiments/AsteroidVsTime/asteroids_timeEnergy_2.h5", 'r') as h5f:
-        data2 = {}
-        for dset in h5f.keys():
-            data2[dset] = h5f[dset][()]
+    # with h5py.File("./Experiments/AsteroidVsTime/asteroids_timeEnergy_2.h5", 'r') as h5f:
+    #     data2 = {}
+    #     for dset in h5f.keys():
+    #         data2[dset] = h5f[dset][()]
 
-    t_num = np.vstack((data['time'], data2['time']))
-    e_energy = np.vstack((data['energy'], data2['energy']))
-    # h, t_end = np.vstack((data['settings'], data2['settings']), axis = 0)
-    asteroids = np.append(data['asteroids'], data2['asteroids'] )
+    # t_num = np.vstack((data['time'], data2['time']))
+    # e_energy = np.vstack((data['energy'], data2['energy']))
+    # # h, t_end = np.vstack((data['settings'], data2['settings']), axis = 0)
+    # asteroids = np.append(data['asteroids'], data2['asteroids'] )
 
-    # t_num = data['time']
-    # e_energy = data['energy']
+    t_num = data['time']
+    e_energy = data['energy']
     h, t_end = data['settings']
-    # asteroids = data['asteroids']
+    asteroids = data['asteroids']
 
     ########################################################
     #### Plots together
@@ -1003,8 +1004,11 @@ def plot_asteroids():
     axes[0].plot(asteroids, t_num[:,0], color = color[3],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
     axes[0].plot(asteroids, t_num[:,1], color = color[9],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
     axes[0].plot(asteroids, t_num[:,2], color = color[5],  linestyle='--', linewidth = 2, marker = '^', markersize = 10,label = 'WH-HNN')
-    t_1 = t_num[0, 0] / ((asteroids[0]+2) * np.log(asteroids[0]+2))  # First time is for 5 asteroids (+2 planets). time per operation
-    axes[0].plot(asteroids, t_1 *((asteroids+2) * np.log(asteroids+2)) , color = 'black', linewidth = 3, alpha = 0.5, linestyle = '--', label = 'N log(N)' )
+    
+    t_1 = t_num[7, 0] / ((asteroids[7]+2) * np.log(asteroids[7]+2))  # First time is for 5 asteroids (+2 planets). time per operation
+    # axes[0].plot(asteroids, t_1 *((asteroids+2) * np.log(asteroids+2)) , color = 'black', linewidth = 3, alpha = 0.5, linestyle = '--', label = 'N log(N)' )
+    t_2 = t_num[7, 0] / (asteroids[7]+2)**2 
+    axes[0].plot(asteroids, t_2 *((asteroids+2)**2) , color = 'black', linewidth = 3, alpha = 0.5, linestyle = '--', label = r'$N^2$' )
     axes[0].set_xlabel('Number of asteroids', fontsize = 20)
     axes[0].set_ylabel('Computation time (s)', fontsize = 20)
     axes[0].set_xscale('log')
@@ -1138,16 +1142,16 @@ def plot_errorPhaseOrbit(theta_JS, E_accel):
     plt.xlabel(r'$\theta_J$', fontsize = 22)
     plt.ylabel(r'$\theta_S$', fontsize = 22)
     plt.colorbar()
-    plt.savefig('./Experiments/error_phase/phasemap.png' % t_end)
+    plt.savefig('./Experiments/error_phase/phasemap.png')
 
     plt.show()
 
 if __name__ == "__main__":
     h = 1e-1
-    multiple = 'JS'
-    # multiple = 'Asteroid_JS'
+    # multiple = 'JS'
+    multiple = 'Asteroid_JS'
     
-    run = 5
+    run = 4
     if run == 1:
         t_end = 5000
         if multiple == 'JS':
@@ -1160,10 +1164,10 @@ if __name__ == "__main__":
         # General
         ##########################################
         sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)
-        # if multiple == 'JS':
-        #     plot_energyvsH(sim, sim2)
+        if multiple == 'JS':
+            plot_energyvsH(sim, sim2)
         # plot_general(sim, sim2, sim3, t, asteroids, asteroids_extra)
-        plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra)
+        # plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra)
         # plot_accelerations(sim, sim2, sim3, typenet = multiple)
     
     elif run == 2: 
