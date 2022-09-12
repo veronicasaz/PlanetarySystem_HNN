@@ -13,6 +13,7 @@ import h5py
 from wh_tf_flag import WisdomHolman
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.gridspec import GridSpec
 
 from data import load_json
 
@@ -737,8 +738,8 @@ def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelera
     plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagcomparison.png' % t_end)
     plt.show()
 
-def plot_accel_flagvsR(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, 
-                flags_i, t, asteroids, asteroids_extra, R):
+def plot_accel_flagvsR(accel_i, accelerations_baseline,\
+                flags_i, t_i, asteroids, asteroids_extra, R_i):
     """
     plot_accelerations_flagvsnoflag: plot accelerations predicted with WH, HNN flag and HNN no flag
     INPUTS:
@@ -749,27 +750,46 @@ def plot_accel_flagvsR(accelerations_WH, accelerations_ANN_noflag, accelerations
     for j in range(asteroids):
         names.append("Asteroid %i"%(j+1))
 
+
+    accelerations_1 = accel_i[1]
+    accelerations_2 = accel_i[3]
+    accelerations_3 = accel_i[5]
+    R = [R_i[1], R_i[3], R_i[5]]
+    t = [t_i[1], t_i[3], t_i[5]]
+    flags_i = [flags_i[1],flags_i[3], flags_i[5]]
+
     h = 1e-1
-    x = np.arange(0, len(accelerations_ANN_noflag)*h, h)
+    x = np.arange(0, len(accelerations_2)*h, h)
     # x2 = np.copy(x)
 
     asteroids_plot = asteroids+asteroids_extra
-    
-    fig, axes = plt.subplots(1,3, figsize=(15,6))
-    fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.4, wspace= 0.25)
 
-    a_WH = np.zeros(len(accelerations_ANN_noflag))
-    a_ANN = np.zeros(len(accelerations_ANN_noflag))
-    a_DNN = np.zeros(len(accelerations_ANN_flag))
+    
+    # fig, axes = plt.subplots(1,3, figsize=(15,6))
+    # fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.4, wspace= 0.25)
+    fig = plt.figure(figsize = (15, 10), constrained_layout = True)
+    gs = GridSpec(2, 3, figure = fig, height_ratios= [2, 1])
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[0, 1])
+    ax3 = fig.add_subplot(gs[0, 2])
+    ax4 = fig.add_subplot(gs[1, :])
+    axes = [ax1, ax2, ax3, ax4]
+
+    a_1 = np.zeros(len(accelerations_2))
+    a_2 = np.zeros(len(accelerations_2))
+    a_3 = np.zeros(len(accelerations_2))
+    a_baseline = np.zeros(len(accelerations_baseline))
         
     body = 3
-    for item in range(len(accelerations_ANN_noflag)):
-        a_WH[item] = np.linalg.norm(accelerations_WH[item, 3*body:3*body+3])
-        a_ANN[item] = np.linalg.norm(accelerations_ANN_noflag[item, 3*body:3*body+3])
-        a_DNN[item] = np.linalg.norm(accelerations_ANN_flag[item, 3*body:3*body+3])
-    accel = [a_WH, a_ANN, a_DNN]
+    for item in range(len(accelerations_2)):
+        a_1[item] = np.linalg.norm(accelerations_1[item, 3*body:3*body+3])
+        a_2[item] = np.linalg.norm(accelerations_2[item, 3*body:3*body+3])
+        a_3[item] = np.linalg.norm(accelerations_3[item, 3*body:3*body+3])
+        a_baseline[item] = np.linalg.norm(accelerations_baseline[item, 3*body:3*body+3])
+    accel = [a_1, a_2, a_3]
         
     for plot in range(3):
+        axes[plot].plot(x, a_baseline, color = color[8], alpha = 0.5, linewidth = 6, label = 'Numerical result')
         axes[plot].plot(x, accel[plot], color = color[3], label = 'R = %0.1f'%R[plot])
     # axes[1].plot(x, a_ANN, color = color[9], label = 'Without flags')
     # axes[2].plot(x, a_DNN, color = color[5], label = 'With flags')
@@ -792,6 +812,15 @@ def plot_accel_flagvsR(accelerations_WH, accelerations_ANN_noflag, accelerations
         axes[plot].legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
 
     axes[0].set_ylabel('a ($au/yr^2$)', fontsize = 22)
+
+    axes[3].plot(R_i, t_i, marker = 'o', color = color[3])
+    axes[3].set_xlabel('R', fontsize = 22)
+    axes[3].set_ylabel('Computation time (s)', fontsize = 22)
+    axes[3].grid(alpha = 0.5)        
+    ticks = -np.log10(axes[3].get_yticks())
+    dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+    axes[3].set_yticklabels(np.round(trunc(axes[3].get_yticks(), decs = 6), decimals = dec+3), rotation = 0, fontsize = 16)
+    axes[3].set_xticklabels(np.round(trunc(axes[3].get_xticks(), decs = 5), decimals = dec+2), rotation = 0, fontsize = 16)
     # axes[0,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
     # axes[1,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
     # axes[2,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
@@ -1041,6 +1070,106 @@ def plot_asteroids():
     plt.savefig('./Experiments/AsteroidVsTime/timeVsError_%dyr.png' % t_end)
     plt.show()
 
+def plot_accel_flagvsR_energy(accel_i, energy_i, time_i, flags_i, asteroids, asteroids_extra, flags_R):
+    """
+    plot_accelerations_flagvsnoflag: plot accelerations predicted with WH, HNN flag and HNN no flag
+    INPUTS:
+        sim, sim2, sim3: simulations for WH, HNN flag and HNN no flag
+    """
+    # Add names of asteroids
+    names = ['Jupiter', 'Saturn']
+    for j in range(asteroids):
+        names.append("Asteroid %i"%(j+1))
+
+    h = 1e-1
+    # x2 = np.copy(x)
+
+    colors = [color[8], color[9], color[3], color[6], color[0], color[10], color[5], color[7], color[1], color[11]]
+    asteroids_plot = asteroids+asteroids_extra
+    
+    fig, axes = plt.subplots(1,3, figsize=(15,6))
+    fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.4, wspace= 0.25)
+        
+    for plot in range(len(energy_i)):
+        n_flags = np.count_nonzero(flags_i[plot][3, :])
+        axes[0].scatter(n_flags, abs((energy_i[plot][-1]-energy_i[plot][0])/energy_i[plot][0]), color = color[plot], label = 'R = %0.1f'%flags_R[plot])
+        axes[1].scatter(n_flags, time_i[plot][1], color = color[plot], label = 'R = %0.1f'%flags_R[plot])
+    
+    axes[0].set_xlabel('Flags', fontsize = 22)
+    axes[0].set_ylabel('Relative energy error', fontsize = 22)    
+    axes[0].grid(alpha = 0.5)        
+    ticks = -np.log10(axes[0].get_yticks())
+    dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+    axes[0].set_yticklabels(np.round(trunc(axes[0].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+    axes[0].set_xticklabels(np.round(trunc(axes[0].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+    axes[0].legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
+
+    axes[1].set_xlabel('Flags', fontsize = 22)
+    axes[1].set_ylabel('Computation time (s)', fontsize = 22)    
+    axes[1].grid(alpha = 0.5)        
+    ticks = -np.log10(axes[1].get_yticks())
+    dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+    axes[1].set_yticklabels(np.round(trunc(axes[1].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+    axes[1].set_xticklabels(np.round(trunc(axes[1].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+    # axes[1].legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
+
+    # plt.tight_layout()
+    plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagR_energy.png' % t_end)
+    plt.show()    
+
+def plot_accel_flagvsR_energy2(accel_i, energy_i, time_i, flags_i, asteroids, asteroids_extra, flags_R):
+    """
+    plot_accelerations_flagvsnoflag: plot accelerations predicted with WH, HNN flag and HNN no flag
+    INPUTS:
+        sim, sim2, sim3: simulations for WH, HNN flag and HNN no flag
+    """
+    # Add names of asteroids
+    names = ['Jupiter', 'Saturn']
+    for j in range(asteroids):
+        names.append("Asteroid %i"%(j+1))
+
+    h = 1e-1
+    # x2 = np.copy(x)
+
+    colors = [color[8], color[9], color[3], color[6], color[0], color[10], color[5], color[7], color[1], color[11]]
+    asteroids_plot = asteroids+asteroids_extra
+    
+    fig, axes = plt.subplots(1,1, figsize=(10,6))
+    fig.subplots_adjust(top=0.9,left = 0.12, right = 0.98, hspace = 0.4, wspace= 0.25)
+        
+    n_flags = np.zeros(len(time_i))
+    time = np.zeros(len(time_i))
+    e_error = np.zeros(len(time_i))
+    for i in range(len(time_i)):
+        n_flags[i] = np.count_nonzero(flags_i[i])
+        time[i] = time_i[i][1] # Choose HNN
+        e_error[i] = (np.mean(energy_i[i][-10:])-np.mean(energy_i[-1][-10]) - energy_i[i][0])
+    # e_error -= e_error[-1]
+    print(e_error)
+
+    sc = axes.scatter(time, e_error, c = n_flags, s = 50)
+    cbar = plt.colorbar(sc)
+    cbar.ax.set_ylabel('Number of flags', rotation=90, size = 24)
+    cbar.ax.tick_params(labelsize=16)
+    
+    axes.set_xlabel('Computation time (s)', fontsize = 22)
+    axes.set_ylabel(r'Relative energy error $\times 10^{6}$', fontsize = 22)    
+    axes.grid(alpha = 0.5)        
+    
+    # ticks = -np.log10(axes.get_yticks())
+    # dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )+1
+    # axes.set_yticklabels(np.round(trunc(axes.get_yticks(), decs = 8), decimals = dec+1), rotation = 0, fontsize = 16)
+    
+    ticks = -np.log10(axes.get_xticks())
+    dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) ) +1
+    axes.set_xticklabels(np.round(trunc(axes.get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+    # axes.legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
+
+
+    # plt.tight_layout()
+    plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagR_energy.png' % t_end)
+    plt.show()    
+
 def plot_energyvsH(sim, sim2):
     """
     Plot interactive energy vs output of the HNN.   
@@ -1152,10 +1281,10 @@ def plot_errorPhaseOrbit(theta_JS, E_accel):
 
 if __name__ == "__main__":
     h = 1e-1
-    multiple = 'JS'
-    # multiple = 'Asteroid_JS'
+    # multiple = 'JS'
+    multiple = 'Asteroid_JS'
     
-    run = 1
+    run = 3
     if run == 1:
         t_end = 5000
         if multiple == 'JS':
@@ -1202,8 +1331,9 @@ if __name__ == "__main__":
                     flags, [t, t_f], asteroids, asteroids_extra)
 
     elif run == 3:
+        multiple = 'Asteroid_JS'
         t_end = 30
-        asteroids = 2
+        asteroids = 1
         asteroids_extra = 0
         ##########################################
         # Test flag vs no flag
@@ -1211,10 +1341,8 @@ if __name__ == "__main__":
         sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)
 
         accelerations_WH = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
-        # accelerations_ANN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txt")
-        # accelerations_DNN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txt")
 
-        flags_R = [0.1, 0.3, 0.7, 1.2]
+        flags_R = [1.5, 1.2, 1.0, 0.7, 0.5, 0.3, 0.1]
         flag_n = np.zeros((len(flags_R),1+asteroids +3))
         flag_dnn = np.zeros((len(flags_R),1+asteroids +3))
         flag_n[:, 0] = flags_R
@@ -1224,6 +1352,7 @@ if __name__ == "__main__":
         flags_i = list()
         accel_i_DNN = list()
         flags_i_DNN = list()
+        time_i = list()
         for flag_R in range(len(flags_R)):
             sim, sim2_f, sim3_f, t_f = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '2', flags_R[flag_R])
 
@@ -1241,17 +1370,19 @@ if __name__ == "__main__":
 
             accel_i_DNN.append(accelerations_DNN_flag)
             flags_i_DNN.append(flags_DNN)
+            time_i.append(t_f[1])
             # plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, \
             #         flags, [t, t_f], asteroids, asteroids_extra)
+
 
         np.savetxt("./Experiments/flagvsnoflag/flagvsR.txt", flag_n)
         np.savetxt("./Experiments/flagvsnoflag/flagvsR_DNN.txt", flag_dnn)
         
-        plot_accel_flagvsR(accel_i[0], accel_i[1], accel_i[2], \
-                    flags_i, [t, t_f], asteroids, asteroids_extra, flags_R)
+        plot_accel_flagvsR(accel_i, accelerations_WH, \
+                    flags_i, time_i, asteroids, asteroids_extra, flags_R)
 
-        plot_accel_flagvsR(accel_i_DNN[0], accel_i_DNN[1], accel_i_DNN[2], \
-                    flags_i_DNN, [t, t_f], asteroids, asteroids_extra, flags_R)
+        # plot_accel_flagvsR(accel_i_DNN[0], accel_i_DNN[1], accel_i_DNN[2], \
+        #             flags_i_DNN, [t, t_f], asteroids, asteroids_extra, flags_R)
 
     elif run == 4:
         ##########################################
@@ -1266,3 +1397,62 @@ if __name__ == "__main__":
         asteroids_extra = 0
         theta_JS, E_accel = compute_predError(t_end, h, asteroids, asteroids_extra)
         plot_errorPhaseOrbit(theta_JS, E_accel)
+
+    elif run == 6:
+        multiple = 'Asteroid_JS'
+        t_end = 50
+        asteroids = 2
+        asteroids_extra = 0
+        ##########################################
+        # Test flag vs no flag
+        ##########################################
+        # sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)
+
+        # accelerations_WH = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
+        # accelerations_ANN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txt")
+        # accelerations_DNN_noflag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txt")
+
+        flags_R = [0.1, 0.3, 0.7, 1.2]
+        # flags_R = [0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0, 1.2]
+        flag_n = np.zeros((len(flags_R),1+asteroids +3))
+        flag_dnn = np.zeros((len(flags_R),1+asteroids +3))
+        flag_n[:, 0] = flags_R
+        flag_dnn[:, 0] = flags_R
+
+        accel_i = list()
+        flags_i = list()
+        accel_i_DNN = list()
+        flags_i_DNN = list()
+        energy_i = list()
+        time_i = list()
+        for flag_R in range(len(flags_R)):
+            sim, sim2_f, sim3_f, t_f = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '2', flags_R[flag_R])
+
+            accelerations_WH = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
+            accelerations_ANN_flag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txt")
+            accelerations_DNN_flag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txt")
+            flags = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txtflag_list.txt")
+            flags_DNN = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txtflag_list.txt")
+
+            print(sim2_f.energy[-1])
+            energy_i.append(sim2_f.energy)
+            time_i.append(t_f)
+            flag_n[flag_R, 1:] = np.sum(flags, axis = 0 )
+            flag_dnn[flag_R, 1:] = np.sum(flags_DNN, axis = 0 )
+
+            accel_i.append(accelerations_ANN_flag)
+            flags_i.append(flags)
+
+            accel_i_DNN.append(accelerations_DNN_flag)
+            flags_i_DNN.append(flags_DNN)
+            # plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, \
+            #         flags, [t, t_f], asteroids, asteroids_extra)
+        energy_i.append(sim.energy)
+
+        
+        np.savetxt("./Experiments/flagvsnoflag/flagvsR.txt", flag_n)
+        np.savetxt("./Experiments/flagvsnoflag/flagvsR_DNN.txt", flag_dnn)
+        
+        plot_accel_flagvsR_energy2(accel_i, energy_i, time_i, \
+                    flags_i, asteroids, asteroids_extra, flags_R)
+
