@@ -18,7 +18,7 @@ import autokeras as ak
 
 from data import standardize, rot_invariance, rot_invariance_inverse
 
-tf.random.set_seed(1234) # keep track of seed
+tf.random.set_seed(12) # keep track of seed
 tf.keras.backend.set_floatx('float64')
 
 import matplotlib
@@ -49,7 +49,7 @@ def plot_tanh_log():
     y3[0:len(y3)//2-1] *= 0
     y4 = np.tanh(x) * x
     y5 = x + np.sin(x)**2
-    f, ax = plt.subplots(figsize = (13,6),nrows=1, ncols=1)
+    f, ax = plt.subplots(figsize = (14,4),nrows=1, ncols=1)
     lw = 4
     plt.plot(x, y1, '-.', linewidth = lw,  label =r'SymmetricLog: f(x) = $tanh(x)\; \cdot log(tanh(x) \cdot x+1)$', color = color[3])
     plt.plot(x, y2, linewidth = lw, label ='tanh: f(x) = $tanh(x)$', color = color[9])
@@ -84,7 +84,7 @@ def loss_mse(x, y, y_pred):
         y_pred: predicted output
     OUTPUT: loss function
     """
-    return tf.reduce_mean( 1e5*tf.square(y - y_pred) ) # 1e5 to avoid numerical problems with small numbers
+    return tf.reduce_mean( tf.square(y - y_pred) ) # 1e5 to avoid numerical problems with small numbers
 
 def loss_asteroid(x, y, y_pred):
     """
@@ -109,8 +109,8 @@ def loss_weight_mse(x, y, y_pred):
         y_pred: predicted output
     OUTPUT: loss function
     """
-    w1 = 100
-    w2 = 10
+    w1 = 1
+    w2 = 1
     w3 = 1
 
     samples = y.get_shape().as_list()[0]
@@ -274,7 +274,7 @@ class ANN(tf.keras.Model):
 
         mass_idx = np.arange(0, n_inputs, 4) # If mass of Jup and Saturn included
         I_np = np.delete(I_np, mass_idx, 0)
-        I_np = - I_np
+        I_np = - I_np 
 
         # Matrix to divide by masses
         I_m_np = np.zeros((n_inputs//4*3, n_inputs))
@@ -547,7 +547,7 @@ class ANN(tf.keras.Model):
             inp_std = inp
 
         if std == True: # alternative standardization (simple case)
-            inp[:, 8] *= 1e30
+            inp[:, 8] *= 1e8
 
         x = tf.convert_to_tensor(inp, dtype= 'float64')   
 

@@ -20,8 +20,11 @@ from test_dataset import plot_prediction_error, plot_prediction_error_H, \
             load_dataset, plot_prediction_error_HNNvsDNN, plot_prediction_error_HNNvsDNN_JS, \
             plot_prediction_error_HNNvsDNN_JS_dif
 
+# from data_noinputmass import get_dataset, get_traintest_data, load_json
+# from nn_tensorflow_noinputmass import ANN
 
-def process_data(config):
+
+def process_data(config, name):
     """
     process data: load the dataset generated and divide it into inputs/outputs, normalize...
     Inputs: 
@@ -30,8 +33,8 @@ def process_data(config):
         data: dictionary with training coords, dcoords, test coords, dcoords
     """
     # Load data 
-    data_0 = get_dataset(config['data_dir'], 'train_test.h5',  verbose=True)
-    data, config['input_dim'] = get_traintest_data(data_0, config)
+    data_0 = get_dataset(config['data_dir']+'/'+name, 'train_test.h5')
+    data, config['input_dim'] = get_traintest_data(data_0, config, config['data_dir']+'/'+name)
     print("Training samples:", np.shape(data['coords']))
 
     return data
@@ -54,8 +57,10 @@ def get_data(config, name = None, plot = False):
     data2 = dict()
     data2['coords'] = data['coords'][0:config['train_samples']]
     data2['dcoords'] = data['dcoords'][0:config['train_samples']]
+    # data2['masses'] = data['masses'][0:config['train_samples']]
     data2['test_coords'] = data['test_coords'][0:config['test_samples']]
     data2['test_dcoords'] = data['test_dcoords'][0:config['test_samples']]
+    # data2['test_masses'] = data['test_masses'][0:config['test_samples']]
     
     print("Training samples:", np.shape(data2['coords']))
 
@@ -86,6 +91,7 @@ def train_DNN(config, data, path_model = None):
 
     # Load from trained network 
     # ANN_tf.load_weights()
+
     # TRAIN
     ANN_tf.train(data)
     ANN_tf.saveTraining()
@@ -149,11 +155,13 @@ def predict(path_pic, config, settings_file_path, data):
         settings_file_path: path to config file
         data: dataset
     """
-    x, y_pred, y_real = load_dataset(config, settings_file_path, data, path_model = path_pic)
 
     if config['loss_variable'] == 'dI': # loss is with accelerations
+        if config['output_dim'] == 'a':
+            x, y_pred, y_real = load_dataset(config, settings_file_path, data, path_model = path_pic, drdv = True)
+        else:
+            x, y_pred, y_real = load_dataset(config, settings_file_path, data, path_model = path_pic, drdv = False)
         plot_prediction_error(path_pic, x, y_pred, y_real)
-    
     elif config['loss_variable'] == 'H': # If loss is h
         plot_prediction_error_H(path_pic, x, y_pred, y_real)
         x, y_pred, y_real = load_dataset(config, settings_file_path, drdv = True)
@@ -203,7 +211,7 @@ if __name__ == "__main__":
 
     ####### GET DATA ###########
     # Only 1 of the 2 necessary
-    # data = process_data(settings) # comment if not necessary. Only needed once
+    # data = process_data(settings, name) # comment if not necessary. Only needed once
     data = get_data(settings, plot = False, name = name+'/')
 
     ####### TRAIN ##########
@@ -212,6 +220,7 @@ if __name__ == "__main__":
     else:
         settings['bodies'] = 3 # Case with asteroid
         
+    # train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/'+'47_45butDNN1e7/')
     # train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/')
     # train_multiple(settings, data, 6)
     # autokeras(settings, data) # Check best parameters
@@ -219,6 +228,8 @@ if __name__ == "__main__":
     ####### PREDICT ########
     path_pic = "./ANN_tf/" + name +'/'
     # predict(path_pic, settings, settings_file_path, data)
+
+    # Before doing this, move the trained models to the corresponding folders
     predict_HNNvsDNN(path_pic, settings, settings_file_path, data, name)
 
 

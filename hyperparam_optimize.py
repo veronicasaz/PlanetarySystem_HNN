@@ -314,6 +314,15 @@ class ANN(tf.keras.Model):
                 #     print(np.mean(self.history['loss'][ep-20:ep-1]))
                 #     print(np.mean(self.history['loss'][ep-5:ep-1]))
                     # break #No improvement for long time
+            
+
+            if ep > 100 and ep % 20 == 0 :
+                if np.mean(self.history['val_loss'][ep-20:ep]) >= 1.2*np.mean(self.history['val_loss'][ep-40:ep-20]): # overfitting
+                    print("Overfitting")
+                    break
+                elif abs(np.mean(self.history['loss'][ep-40:ep]) - np.mean(self.history['loss'][ep-90:ep-40]))/ np.mean(self.history['loss'][ep-90:ep-40]) < 0.01: # no improvement
+                    print("No improvement")
+                    break
                 
         # self.model.save(self.path_model + "model_tanh.h5")
         self.model.save(self.path_model + "model.h5")
@@ -446,7 +455,7 @@ def optimize(data, config, params, N):
         print("=============================================================")
         print("Network number: ", net)
         print("=============================================================")
-        ANN_tf = ANN(config, params_net, [100,10], path_model = "./ANN_tf/asteroid/optim/net_"+str(net+1)+"_")
+        ANN_tf = ANN(config, params_net, [1,1], path_model = "./ANN_tf/asteroid/optim/net_"+str(net+1)+"_")
 
         ANN_tf.train(data)
         ANN_tf.saveTraining()
@@ -506,24 +515,33 @@ def plot_optim(data, N):
         N: number of experiments to carry out
     """
     params = np.loadtxt("./ANN_tf/asteroid/optim/params.txt")
-    loss = np.zeros((N, 2))
 
     # TODO: eliminate, load manually
-    N_folder = [1, 9, 10, 33]
-    net_counter = 0
-    for folder in range(len(N_folder)):
-        for net in range(N_folder[folder]):
-            data_t = np.loadtxt("./ANN_tf/asteroid/optim/"+str(folder+1)+"/net_"+str(net+1)+"_" +"training.txt")
-            loss[net_counter, 0] = data_t[0, -1]
-            loss[net_counter, 1] = data_t[1, -1]
-            net_counter +=1
+    # N_folder = [1, 9, 10, 33]
+    # N_folder = [5]
+    # net_counter = 0
+    # for folder in range(len(N_folder)):
+    #     for net in range(N_folder[folder]):
+    #         data_t = np.loadtxt("./ANN_tf/asteroid/optim/"+str(folder+1)+"/net_"+str(net+1)+"_" +"training.txt")
+    #         loss[net_counter, 0] = data_t[0, -1]
+    #         loss[net_counter, 1] = data_t[1, -1]
+    #         net_counter +=1
+ 
+    # N = 5
+    loss = np.zeros((N, 2))
 
-    # for net in range(N):
-    #     data_t = np.loadtxt("./ANN_tf/asteroid/optim/net_"+str(net+1)+"_" +"training.txt")
-    #     # train_loss = data_t[0, -1]
-    #     # val_loss = data_t[1, -1]
-    #     loss[net, 0] = data_t[0, -1]
-    #     loss[net, 1] = data_t[1, -1]
+    for net in range(N):
+        data_t = np.loadtxt("./ANN_tf/asteroid/optim/net_"+str(net+1)+"_" +"training.txt")
+        # train_loss = data_t[0, -1]
+        # val_loss = data_t[1, -1]
+        # train_loss = data_t[0, :] 
+        # train_loss = train_loss[train_loss != 0]
+        # val_loss = data_t[0, :] 
+        # val_loss = val_loss[val_loss != 0]
+        # loss[net, 0] = train_loss[-1]
+        # loss[net, 1] = val_loss[-1]
+        loss[net, 0] = data_t[0, -1]
+        loss[net, 1] = data_t[1, -1]
 
     # netsize = 12*params[:, 2] + params[:, 2]*params[:, 1]
     D_samples = np.hstack((loss, params[0:N,:]))
@@ -547,24 +565,24 @@ def plot_optim(data, N):
     # plt.plot(D_samples[:, 2], D_samples[:, 0], marker = 'o', label = 'train loss')
     # plt.plot(D_samples[:, 2], D_samples[:, 1], marker = 'x', label = 'val loss')
     plt.scatter(D_samples[:, 0], D_samples[:, 1], s = 120, marker = 'o' , color = color[3])
-    label1 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f, \n$lr_0$: %0.2E, \nlr steps: %i, \nlr decay: %0.2E\n"%(D_samples[index, 2],\
-        D_samples[index, 3], D_samples[index, 4], D_samples[index, 5], D_samples[index, 6], D_samples[index, 7], D_samples[index, 8])
-    label2 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f, \n$lr_0$: %0.2E, \nlr steps: %i, \nlr decay: %0.2E"%(D_samples[index_val, 2],\
-        D_samples[index_val, 3], D_samples[index_val, 4], D_samples[index_val, 5], D_samples[index_val, 6], D_samples[index_val, 7], D_samples[index_val, 8])
+    label1 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f\n"%(D_samples[index, 2],\
+        D_samples[index, 3], D_samples[index, 4], D_samples[index, 5])
+    label2 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f"%(D_samples[index_val, 2],\
+        D_samples[index_val, 3], D_samples[index_val, 4], D_samples[index_val, 5])
     plt.scatter(D_samples[index, 0], D_samples[index, 1], s = 250, color = color[9], marker = 's' , label = label1)
     plt.scatter(D_samples[index_val, 0], D_samples[index_val, 1], s = 250, color =color[5], marker = 's' , label = label2)
 
     # plt.title('Results of hyperparameter optimization', fontsize = 22)
-    legend = plt.legend(fontsize = 21, bbox_to_anchor=(1.0, 1.0))
+    legend = plt.legend(fontsize = 25, bbox_to_anchor=(1.0, 1.0))
     # legend = plt.legend(fontsize = 12, title = 'Number of training samples, layers, neurons per layer, ratio of neurons, initial learning rate, \nlearning rate decay, learning rate steps')
     # legend.get_title().set_fontsize('15')
     plt.grid(alpha = 0.5)
     # plt.axis('equal')
 
-    plt.xlabel("Train loss", fontsize = 25)
-    plt.ylabel("Validation loss", fontsize = 25)
-    plt.xticks(fontsize = 22)
-    plt.yticks(fontsize = 22)
+    plt.xlabel("Train loss", fontsize = 27)
+    plt.ylabel("Validation loss", fontsize = 27)
+    plt.xticks(fontsize = 25)
+    plt.yticks(fontsize = 25)
     plt.xscale('log')
     plt.yscale('log')
     plt.tight_layout()
@@ -664,24 +682,28 @@ if __name__ == "__main__":
     settings_dataset = load_json("./config_data.json")
     settings = {**settings_dataset, **settings}
 
+    settings['max_epochs'] = 2000
     data = get_data(settings, plot = False, name = 'asteroid/')
 
     # samples = [100000, 150000, 200000, 250000, 300000]
     # samples = [4000]
     # samples = [10, 20, 50, 100]
-    # layers = [2, 3, 4, 5]
-    samples = [1000, 10000, 50000]
-    neurons = [100, 200, 500, 700]
-    layers = [1, 7, 10]
+    layers = [2, 3, 4, 5]
+    samples = [10000, 50000, 10000, 200000, 250000]
+    # samples = [250000]
+    # samples = [50]
+    neurons = [100, 200, 300, 500, 700]
+    # layers = [3]
     # neurons = [300]
     # ratio_neurons = [0.5, 0.6, 0.7, 1.0]
     ratio_neurons = [0.6]
-    lr_0 = [1e-4, 5e-4, 1e-3, 1e-2]
-    lr_steps = [1e4, 1e5, 1e6]
+    lr_0 = [1e-3]
+    # lr_steps = [1e5, 5e5, 1e6]
+    lr_steps = [5e5]
     lr_decay = [0.9]
     
 
-    N = 53
+    N = 33
 
     params = [samples, layers, neurons, ratio_neurons, lr_0, lr_steps,\
         lr_decay]

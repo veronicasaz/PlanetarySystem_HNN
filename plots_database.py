@@ -103,9 +103,12 @@ def plot_distribution(coords, dcoords, namefile, name):
     fig, axes = plt.subplots(figsize = (12,8),nrows=n_rows, ncols=n_cols)
     fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.1)
     if name == 'asteroid/':
+        # title = [r'Jupiter mass ($m_{Sun}$)',r'Jupiter x ($au$)', r'Jupiter y ($au$)', r'Jupiter z ($au$)',\
+        #      r'Saturn mass ($m_{Sun}$)',r'Saturn x ($au$)', r'Saturn y ($au$)', r'Saturn z ($au$)', \
+        #      r'Asteroid mass ($kg$)', r'Asteroid x ($au$)', r'Asteroid y ($au$)', r'Asteroid z ($au$)']
         title = [r'Jupiter mass ($m_{Sun}$)',r'Jupiter x ($au$)', r'Jupiter y ($au$)', r'Jupiter z ($au$)',\
              r'Saturn mass ($m_{Sun}$)',r'Saturn x ($au$)', r'Saturn y ($au$)', r'Saturn z ($au$)', \
-             r'Asteroid mass ($kg$)', r'Asteroid x ($au$)', r'Asteroid y ($au$)', r'Asteroid z ($au$)']
+             r'Asteroid mass ($\times 10^{8}$) ($m_{Sun}$)', r'Asteroid x ($au$)', r'Asteroid y ($au$)', r'Asteroid z ($au$)']
         title_o = [r'Jupiter $a_x$ ($au\;/\;  yr^2$)', r'Jupiter $a_y$ ($au\;/\;    yr^2$)', r'Jupiter $a_z$ ($au\;/\;    yr^2$)',\
              r'Saturn $a_x$ ($au\;/\;    yr^2$)', r'Saturn $a_y$ ($au\;/\;    yr^2$)', r'Saturn $a_z$ ($au\;/\;    yr^2$)', \
              r'Asteroid $a_x$ ($au\;/\;    yr^2$)', r'Asteroid $a_y$ ($au\;/\;    yr^2$)', r'Asteroid $a_z$ ($au\;/\;    yr^2$)']
@@ -115,14 +118,15 @@ def plot_distribution(coords, dcoords, namefile, name):
         title_o = [r'Jupiter $a_x$ ($au\;/\;  yr^2$)', r'Jupiter $a_y$ ($au\;/\;    yr^2$)', r'Jupiter $a_z$ ($au\;/\;    yr^2$)',\
              r'Saturn $a_x$ ($au\;/\;    yr^2$)', r'Saturn $a_y$ ($au\;/\;    yr^2$)', r'Saturn $a_z$ ($au\;/\;    yr^2$)']
 
+    # coords[:, -4] *= 1e10
     for j in range(n_inputs):
         ax = axes[int(j //(n_cols)), int(j%(n_cols) )] 
         ax.hist(coords[:, j], bins = 20, histtype = 'bar', color = color[1], edgecolor="white")
         # ax.set_title(title[j], fontsize = 13)
         ax.set_xlabel(title[j], fontsize = 18)
         ax.set_ylabel("Frequency", fontsize = 18)
-        ax.set_xticklabels(trunc(ax.get_xticks(), decs = 2),  fontsize=15)
-        ax.set_yticklabels(ax.get_yticks(), fontsize = 15)
+        # ax.set_xticklabels(trunc(ax.get_xticks(), decs = 7),  fontsize=15)
+        # ax.set_yticklabels(ax.get_yticks(), fontsize = 15)
     # plt.suptitle('Distribution of inputs', y=0.98, fontsize = 20)
     plt.tight_layout()
     plt.savefig( "./dataset/"+name+"input_distribution"+namefile+".png", dpi = 100)
@@ -148,7 +152,7 @@ def plot_distribution(coords, dcoords, namefile, name):
         logbins = np.concatenate((logbins_neg, logbins_pos ))
         
         ax.hist(dcoords[:, j], bins = logbins, histtype = 'bar', color = color[1], density=False, edgecolor="white")
-        ax.set_xscale("symlog", linthresh = 10**np.trunc(min(np.log10(bins_abs))))
+        ax.set_xscale("symlog", linthresh = 10**(np.trunc(min(np.log10(bins_abs)))))
         ax.set_xticklabels(ax.get_xticks() ,rotation = 45, fontsize = 15)
         ax.set_yticklabels(ax.get_yticks(), fontsize = 15)
         # ax.set_yscale("symlog",linthresh=1.e-6)
