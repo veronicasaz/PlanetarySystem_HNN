@@ -168,7 +168,7 @@ def rot_invariance_inverse(data, angles):
 
     return data_rot
 
-def get_traintest_data(data, config_NN):
+def get_traintest_data(data, config_NN, direcName):
     """
     get_traintest_data: make input and output data from dataset. 
     INPUTS:
@@ -197,12 +197,12 @@ def get_traintest_data(data, config_NN):
 
     # Use positions 
     for sim in range(simulations):  
-        data['mass'][sim, -1] *= 1e30 # make same order of magnitude as planets
+        data['mass'][sim, -1] *= 1e8 # make same order of magnitude as planets
         coords[sim] = np.hstack(( np.reshape(data['mass'][sim, 1:], (-1,1)), data['coords'][sim, 1:,0:3])).flatten()
         dcoords[sim] = data['dcoords'][sim, 1:, 3:].flatten() # to get a
 
     for sim in range(simulations_test):
-        data['test_mass'][sim, -1] *= 1e30 
+        data['test_mass'][sim, -1] *= 1e8
         test_coords[sim] = np.hstack(( np.reshape(data['test_mass'][sim, 1:], (-1,1)), data['test_coords'][sim, 1:,0:3])).flatten()
         test_dcoords[sim] = data['test_dcoords'][sim, 1:, 3:].flatten()
 
@@ -245,7 +245,7 @@ def get_traintest_data(data, config_NN):
     data_2['test_dcoords'] = test_data[:, input_dim:]
 
     # Save to file
-    path_dataset = config['data_dir']
+    path_dataset = direcName
     with h5py.File(os.path.join(path_dataset, 'train_test_processed.h5'), 'w') as h5f:
         for dset in data_2.keys():
             h5f.create_dataset(dset, data=data_2[dset], compression="gzip")

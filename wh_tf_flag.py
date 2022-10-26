@@ -10,6 +10,7 @@ from abie.ode import ODE
 import sys
 import logging 
 import copy 
+import time
 
 __integrator__ = 'WisdomHolman'
 
@@ -97,8 +98,10 @@ class WisdomHolman(Integrator):
         accelerations_list = list()
         accelerations_list.append(accel)
         flags_list = np.zeros(self.particles.N)
+        
 
         self.H = list()
+        self.T_total = 0
         while t_current < to_time:
             helio, accel, flag_list, H_i = self.wh_advance_step(helio, t_current, self.h, self.particles.masses, self.particles.N, accel, self.CONST_G, nih)
             accelerations_list.append(accel)
@@ -128,6 +131,7 @@ class WisdomHolman(Integrator):
             np.savetxt(self.accel_file_path_2, flags_list)
             np.savetxt(self.accel_file_path_3, self.H)
 
+        self.flag_list = flags_list
         return 0
 
     def store_state(self):
@@ -309,12 +313,14 @@ class WisdomHolman(Integrator):
         flag_list = np.zeros(nbodies)
         H_i = 0
         if nih is False:
+            t_0 = time.process_time()
             accel = WisdomHolman.compute_accel(helio, jacobi, masses, nbodies, G)
+            self.T_total += time.process_time()-t_0
         else:
+            t_0 = time.process_time()
             q = jacobi[0:3*nbodies].reshape(nbodies, 3)
             p = np.multiply(jacobi[3*nbodies:].reshape(nbodies,3).T, masses).T
             jacobi_input = np.hstack((np.reshape(masses[1:], (-1,1)), q[1:,:]))
-
             accel_prev = accel # Save value of previous acceleration for flag
             if self.multiple_nets == 'Asteroid_JS':  # Case with Sun, Jupiter, Saturn and asteroids          
                 input_JS = jacobi_input[0:2].flatten()
@@ -328,8 +334,11 @@ class WisdomHolman(Integrator):
                 output_nn = self.hnn[1].predict(input_nn, std = self.hnn[1].std)
                 accel[9:] = np.array(output_nn[:, 6:]).flatten()
                 
+                # print("T_net", time.time()-t_0)
+                # t_02 = time.time()
                 # Previous step as requirement
                 if self.flag == True:
+                    # print("Flag =", self.flag)
                     accel_2d = accel.reshape((nbodies, 3))
                     accel_2d_prev = accel_prev.reshape((nbodies, 3))
                     dif_accel = np.linalg.norm( (accel_prev-accel).reshape((nbodies, 3)), axis = 1).flatten()
@@ -339,7 +348,6 @@ class WisdomHolman(Integrator):
                     # idx_bad = np.where(np.log10(dif_accel) >  np.log10(self.R*accel_norm_prev))[0]
                     idx_bad = np.where(dif_accel/(accel_norm_prev+1e-11) >  self.R)[0]
                     flag_list[idx_bad] = np.ones(len(idx_bad)) # save which ones are bad
-                    
                     helio_pos = helio[0:3*nbodies].reshape((nbodies, 3))
                     helio_vel = helio[3*nbodies:].reshape((nbodies, 3)) 
                     jacobi_pos = jacobi[0:3*nbodies].reshape((nbodies, 3))
@@ -351,13 +359,20 @@ class WisdomHolman(Integrator):
                         idx_coords = np.concatenate((idx_pos, idx_vel))
                         accel[0:9] = WisdomHolman.compute_accel(helio[idx_coords], jacobi[idx_coords], masses[0:3], 3, G) # correct Jup and Sat
                     idx_bad = np.delete(idx_bad, idx_bad<3)
+                    # Do at once all the wrong ones
+
+                    idx_pos = np.arange(0, 3*3, 1)
+                    idx_vel = np.arange(nbodies*3, nbodies*3+3*3, 1)
+                    idx_masses = np.arange(0, 3, 1)
                     for bad_body in idx_bad:
-                        idx_pos = np.concatenate((np.arange(0, 3*3, 1), np.arange(bad_body*3,bad_body*3+3,1)))
-                        idx_vel = np.concatenate(( np.arange(nbodies*3, nbodies*3+3*3, 1), np.arange(nbodies*3+ bad_body*3,nbodies*3+ bad_body*3+3,1) ))
+                        idx_pos = np.concatenate((idx_pos, np.arange(bad_body*3,bad_body*3+3,1)))
+                        idx_vel = np.concatenate((idx_vel, np.arange(nbodies*3+ bad_body*3,nbodies*3+ bad_body*3+3,1) ))
+                        idx_masses = np.append(idx_masses, bad_body)
+                    if len(idx_bad) > 0:
                         idx_coords = np.concatenate((idx_pos, idx_vel))
-                        idx_masses = np.append(np.arange(0, 3, 1), bad_body)
-            
-                        accel[bad_body*3:bad_body*3+3] = WisdomHolman.compute_accel(helio[idx_coords], jacobi[idx_coords], masses[idx_masses], 4, G)[9:] # asteroid
+                        accel[idx_pos[9:]] = WisdomHolman.compute_accel(helio[idx_coords], jacobi[idx_coords], masses[idx_masses], 3+len(idx_bad), G)[9:] # asteroid
+                    # print("Time flag", time.time()-t_0)
+                # print("t2 ", time.time()-t_0)
 
             elif self.multiple_nets == 'Asteroid_JS_energy':
                 input_JS = jacobi_input[0:2,:].flatten()
@@ -388,8 +403,8 @@ class WisdomHolman(Integrator):
                 output_n = np.array(self.hnn.predict(input_nn))[0]
                 accel = np.zeros(np.shape(accel)) # include acceleration =0 of central body
                 accel[3:] = output_n
-                # self.hnn.pred_type = 'H'
-                # H_i = self.hnn.predict(input_nn)[0]
+                self.hnn.pred_type = 'H'
+                H_i = self.hnn.predict(input_nn)[0]
 
                 # Check if prediction by ANN is valid
                 accel_2d = accel.reshape((nbodies, 3))
@@ -418,7 +433,8 @@ class WisdomHolman(Integrator):
                     if abs(accel_prev - accel)/abs(1e-11 + accel_prev + accel) >  5.0:
                         accel = WisdomHolman.compute_accel(helio, jacobi, masses, nbodies, G)
                         flag_list = np.ones(nbodies)
-                       
+        
+            self.T_total += time.process_time()-t_0
         # Kick:
         helio = WisdomHolman.wh_kick(helio, dt / 2, masses, nbodies, accel)
         self.dcoord_a.append(accel)

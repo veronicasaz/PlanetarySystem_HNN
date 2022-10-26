@@ -12,9 +12,10 @@ from data import get_dataset
 import matplotlib
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
+# matplotlib.rcParams['axes.formatter.useoffset'] = False
 
-color = [ 'skyblue','royalblue', 'blue', 'navy','slateblue', 'coral', 'salmon',\
-    'orange', 'burlywood', 'lightgreen', 'olivedrab','darkcyan' ]
+color1 = ['navy', 'dodgerblue','darkorange']
+color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
     
 def plot_pairplot(data, name):
     """
@@ -121,12 +122,13 @@ def plot_distribution(coords, dcoords, namefile, name):
     # coords[:, -4] *= 1e10
     for j in range(n_inputs):
         ax = axes[int(j //(n_cols)), int(j%(n_cols) )] 
-        ax.hist(coords[:, j], bins = 20, histtype = 'bar', color = color[1], edgecolor="white")
+        ax.hist(coords[:, j], bins = 20, histtype = 'bar', color = color1[0], edgecolor="white")
         # ax.set_title(title[j], fontsize = 13)
         ax.set_xlabel(title[j], fontsize = 18)
         ax.set_ylabel("Frequency", fontsize = 18)
-        # ax.set_xticklabels(trunc(ax.get_xticks(), decs = 7),  fontsize=15)
-        # ax.set_yticklabels(ax.get_yticks(), fontsize = 15)
+        ax.set_xticklabels(trunc(ax.get_xticks(), decs = 3),  fontsize=15)
+        ax.get_xaxis().set_major_formatter('{x:1.2f}')
+        ax.set_yticklabels(ax.get_yticks(), fontsize = 15)
     # plt.suptitle('Distribution of inputs', y=0.98, fontsize = 20)
     plt.tight_layout()
     plt.savefig( "./dataset/"+name+"input_distribution"+namefile+".png", dpi = 100)
@@ -134,7 +136,7 @@ def plot_distribution(coords, dcoords, namefile, name):
 
     # PLOT OUTPUTS
     
-    fig, axes = plt.subplots(figsize = (15,8),nrows=n_rows, ncols=n_cols-1)
+    fig, axes = plt.subplots(figsize = (12,8),nrows=n_rows, ncols=n_cols-1)
     fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.4)
     for j in range(n_outputs):
         ax = axes[int(j //(n_cols-1)), int(j%(n_cols-1) )]         
@@ -151,9 +153,10 @@ def plot_distribution(coords, dcoords, namefile, name):
         logbins_neg = np.flip(-logbins_pos)
         logbins = np.concatenate((logbins_neg, logbins_pos ))
         
-        ax.hist(dcoords[:, j], bins = logbins, histtype = 'bar', color = color[1], density=False, edgecolor="white")
+        ax.hist(dcoords[:, j], bins = logbins, histtype = 'bar', color = color1[0], density=False, edgecolor="white")
         ax.set_xscale("symlog", linthresh = 10**(np.trunc(min(np.log10(bins_abs)))))
         ax.set_xticklabels(ax.get_xticks() ,rotation = 45, fontsize = 15)
+        ax.get_xaxis().set_major_formatter(plt.LogFormatter(10,  labelOnlyBase=False))
         ax.set_yticklabels(ax.get_yticks(), fontsize = 15)
         # ax.set_yscale("symlog",linthresh=1.e-6)
         ax.set_xlabel(title_o[j], fontsize = 18)
@@ -355,9 +358,11 @@ def plot_trajectory(data, name):
     INPUTS: 
         data: dataset with inputs and outputs
     """
-    fig, ax = plt.subplots(figsize = (10,6),nrows=1, ncols=1)
-    marker = [ 'o','.', '*', 's']
-
+    fig, ax = plt.subplots(figsize = (8,6),nrows=1, ncols=1)
+    marker = [ 'o','.', 's', 's']
+    markersize = 20
+    axissize = 25
+    ticksize = 23
     # fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.4)
 
     # Choose variable and number of samples to plot
@@ -366,28 +371,35 @@ def plot_trajectory(data, name):
     x_2 = data['coords'][:500, 5]
     y_2 = data['coords'][:500, 6]
 
-    plt.scatter(0,0, color = color[8], marker = marker [0], label = 'Sun')
+    plt.scatter(0,0, color = color2[3], marker = marker [0], s = markersize, label = 'Sun')
 
     if name == 'asteroid/':
         x_3 = data['coords'][:200, 9]
         y_3 = data['coords'][:200, 10]
-        plt.scatter(x_3, y_3, color = color[5], marker = marker[2],  s = 16, label = 'Asteroids')
+        plt.scatter(x_3, y_3, color = color2[2], marker = marker[1],  s = markersize, label = 'Asteroids')
 
-    plt.scatter(x_1, y_1, color = color[9], marker = marker[1], label = 'Jupiter')
-    plt.scatter(x_2, y_2, color = color[3], marker = marker[1], label = 'Saturn')
-    plt.xlabel('x (au)', fontsize = 23)
-    plt.ylabel('y (au)', fontsize = 23)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
+    plt.scatter(x_1, y_1, color = color2[0], marker = marker[0], s = markersize, label = 'Jupiter')
+    plt.scatter(x_2, y_2, color = color2[1], marker = marker[0], s = markersize, label = 'Saturn')
+    plt.xlabel('x (au)', fontsize = axissize)
+    plt.ylabel('y (au)', fontsize = axissize)
+    plt.xticks(fontsize=ticksize)
+    plt.yticks(fontsize=ticksize)
     plt.axis('equal')
 
     plt.grid(alpha = 0.5)
     # plt.legend(fontsize = 20, framealpha = 0.85, loc = 'upper left')
-    plt.legend(fontsize = 23, framealpha = 1.0, bbox_to_anchor=(1.0, 1.0))
+    lgnd = plt.legend(loc = 'lower left', fontsize = 23, \
+                framealpha = 0.9, bbox_to_anchor=(-0.12, 1.02, 1.2, 1.5),\
+                ncol=4, mode="expand", borderaxespad=0., handletextpad=0.)
+    lgnd.legendHandles[0]._sizes = [100]
+    lgnd.legendHandles[1]._sizes = [100]
+    lgnd.legendHandles[2]._sizes = [100]
+    lgnd.legendHandles[3]._sizes = [100]
+    # plt.legend(fontsize = axissize, framealpha = 1.0, bbox_to_anchor=(1.0, 1.0))
     
     # plt.title("Distribution of positions of Jupiter, Saturn, and the asteroids", fontsize = 15)
     plt.tight_layout()
-    plt.savefig( "./dataset/"+name+"trajectory_distribution.png", dpi = 100)
+    plt.savefig( "./dataset/"+name+"trajectory_distribution.png", dpi = 100, bbox_inches='tight')
     plt.show()
     
 

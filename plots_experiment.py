@@ -23,6 +23,7 @@ from plots_papers import plot_NeurIPS, plot_NeurIPS_energyTogether, \
                 plot_asteroids_NeurIPS, polifit, plot_CompPhys_trajectory
 
 import matplotlib
+from test_dataset import trunc
 
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
@@ -1233,20 +1234,22 @@ def plot_energyvsH(sim, sim2):
 
     lw = 3
     fig, axes = plt.subplots(1,1, figsize=(8,6))
-    axes.plot(time, E_1,  linewidth = lw, color = color[3], label = 'WH Energy')
-    axes.plot(time, E_2, ':',  linewidth = lw, color = color[9], label = 'WH-HNN Energy')
-    axes.plot(time, np.array(sim2.H), linewidth = lw, color = color[5], label = 'WH-HNN H')
+    axes.plot(time, E_1,  linewidth = lw, color = color1[0], label = 'WH Energy')
+    axes.plot(time, E_2, ':',  linewidth = lw, color = color1[2], label = 'WH-HNN Energy')
+    axes.plot(time, np.array(sim2.H), linewidth = lw, color = color1[1], label = 'WH-HNN H')
     # plt.title('Comparison of interactive Hamiltonian \n and the predicted output of the HNN', fontsize = 13)
-    plt.xlabel('Time ($yr$)', fontsize =23)
-    plt.ylabel(r'Energy (${kg}\; {au}^2\; yr^{-2}$)', fontsize =23)
-    # axes.ticklabel_format(useOffset=False)
-    # axes.xaxis.set_minor_formatter(mticker.ScalarFormatter())
-    # plt.ticklabel_format(axis = "y", style="scientific")
-    plt.xticks(fontsize = 18)
-    plt.yticks(fontsize = 18)
-    # axes.yaxis.set_major_formatter(matplotlib.ticker.LogFormatter())
-    # plt.yticks(axes.get_yticks(), fontsize = 16)
-    plt.legend(fontsize = 20)
+    plt.xlabel('Time ($yr$)', fontsize =30)
+    plt.ylabel(r'Energy $\times 10^6$ (${kg}\; {au}^2\; yr^{-2}$)', fontsize =30)
+
+    plt.xticks(fontsize = 25)
+    plt.yticks(fontsize = 25)
+    axes.ticklabel_format(useOffset=False, style='plain')
+    # axes.set_yticklabels(axes.get_yticks()*1e6, fontsize = 16)
+    ticks = -np.log10(abs(axes.get_yticks()))+1
+    dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+    axes.set_yticklabels(np.round(trunc(axes.get_yticks()*1e6, decs = 6), decimals = 2), fontsize = 27)
+    
+    plt.legend(fontsize = 25)
     plt.tight_layout()
     plt.savefig('./Experiments/sun_jupiter_saturn/HvsE_%dyr.png' % t_end)
     plt.show()
@@ -1314,10 +1317,10 @@ def plot_errorPhaseOrbit(theta_JS, E_accel):
 
 if __name__ == "__main__":
     h = 1e-1
-    # multiple = 'JS'
-    multiple = 'Asteroid_JS'
+    multiple = 'JS'
+    # multiple = 'Asteroid_JS'
     
-    run = 4
+    run = 2.5
     if run == 1:
         if multiple == 'JS':
             t_end = 5000
@@ -1330,16 +1333,16 @@ if __name__ == "__main__":
         ##########################################
         # General
         ##########################################
-        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)
-        # if multiple == 'JS':
-        #     plot_energyvsH(sim, sim2)
-        # plot_general(sim, sim2, sim3, t, asteroids, asteroids_extra)
-        # plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra, typePlot = multiple)
+        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)            
         plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_extra, typePlot = multiple)
-        # plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot = multiple)
         # plot_NeurIPS_energyTogether(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot = multiple)
-        # plot_accelerations(sim, sim2, sim3, typenet = multiple)
-    
+    elif run == 2.5:
+        multiple = 'JS'
+        t_end = 25
+        asteroids = 0
+        asteroids_extra = 0
+        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)            
+        plot_energyvsH(sim, sim2)
     elif run == 2: 
         t_end = 30
         asteroids = 1

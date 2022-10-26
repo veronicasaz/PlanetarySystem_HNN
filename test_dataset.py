@@ -15,15 +15,16 @@ import matplotlib.colors as plc
 from matplotlib.ticker import FormatStrFormatter
 import ast
 from nn_tensorflow import  ANN 
+# from nn_tensorflow_noinputmass import ANN
 import tensorflow as tf
-from data import get_dataset, get_traintest_data, load_json, standardize
+# from data import get_dataset, get_traintest_data, load_json, standardize
 
 import matplotlib
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
 
-color = [ 'skyblue','royalblue', 'blue', 'navy','slateblue', 'coral', 'salmon',\
-    'orange', 'burlywood', 'lightgreen', 'olivedrab','darkcyan' ]
+color1 = ['navy', 'dodgerblue','darkorange']
+color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
 
 
 def load_dataset(config, settings_file_path, data, path_model = None, drdv = False):
@@ -47,11 +48,13 @@ def load_dataset(config, settings_file_path, data, path_model = None, drdv = Fal
     dxdt = data['dcoords']
     test_x = data['test_coords']
     test_dxdt = data['test_dcoords']
+    # masses = data['test_masses'] #TODO eliminate
     
     # Reduce the amound of data to plot
     points = 1000
     test_x = test_x[0:points, :]
     test_dxdt = test_dxdt[0:points, :]
+    # masses = masses[0:points, :] #TODO eliminate
 
     # Tensorflow network
     ANN_tf = ANN(config, path_model = path_model)
@@ -60,7 +63,7 @@ def load_dataset(config, settings_file_path, data, path_model = None, drdv = Fal
 
     # Predict feature standardizes data
     if drdv == False:
-        test_dxdt_pred = ANN_tf.predict(test_x, std = False)
+        test_dxdt_pred = ANN_tf.predict(test_x, std = False) #TODO eliminate masses
     else:
         ANN_tf.pred_type = 'a'
         test_dxdt_pred = ANN_tf.predict(test_x, std = False)
@@ -105,12 +108,14 @@ def plot_prediction_error(path_figure, x, y_pred, y_real):
             ax[sbu2].set_xticklabels(ax[sbu2].get_xticks(), rotation = 5)
             ax[sbu2].xaxis.set_major_formatter(FormatStrFormatter('%.2E'))
             ax[sbu2].yaxis.set_major_formatter(FormatStrFormatter('%.2E'))
+            ax[sbu2].set_xlim(left = min(y_real[:, var]), right = max(y_real[:, var]))
+            ax[sbu2].set_ylim(bottom = min(y_pred[:, var]), top = max(y_pred[:, var]))
             ax[sbu2].grid(alpha = 0.2)
-            ax[sbu2].axis('equal')
+            # ax[sbu2].axis('equal')
 
     # plt.tight_layout()
     plt.savefig(path_figure+'Error.png', dpi = 100)
-    # plt.show() 
+    plt.show() 
 
 def trunc(values, decs=0):
     return np.trunc(values*10**decs)/(10**decs)
@@ -135,53 +140,77 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
     """
     subplot2 = 3
     subplot1 = np.shape(y_pred)[1]//subplot2
-    fig = plt.figure(figsize = (20,15))
+    fig = plt.figure(figsize = (23,18))
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
-    plt.subplots_adjust(wspace = 0.5, hspace=0.7)
+    plt.subplots_adjust(wspace = 0.5, hspace=2.2)
 
     xlabel = [r'$a_x$', r'$a_y$', r"$a_z$"]
     title = ['Jupiter', 'Saturn', 'Asteroids']
     for sbu in range(subplot1):
-        # subfigs[sbu].suptitle(title[sbu], fontsize = 18)
         # subfigs[sbu].subplots_adjust(wspace = 0.5, hspace = 0.1, top = 1.0 -(sbu+0.02)/subplot1, bottom = 1.0 -(sbu+0.95)/subplot1)
-        subfigs[sbu].subplots_adjust(left = 0.07, right = 0.82, wspace = 0.4, top = 0.95, bottom = 0.2)
+        subfigs[sbu].subplots_adjust(left = 0.07, right = 0.82, wspace = 0.4, hspace = 2.0, top = 0.89, bottom = 0.25)
         ax = subfigs[sbu].subplots(nrows=1, ncols=subplot2)
+        subfigs[sbu].suptitle(title[sbu], fontsize = 35, x=0.41, y=.97, horizontalalignment='left')
 
         for sbu2 in range(subplot2):
             var = sbu*3+ sbu2
             xline = np.linspace(min(y_real[:, var])*1.2, max(y_real[:,var])*1.2, num= 2)
-            ax[sbu2].plot(xline, xline, color = 'black', linewidth = 4, zorder = 1, alpha = 0.5)
+            ax[sbu2].plot(xline, xline, color = 'black', linewidth = 4, zorder = 1, alpha = 0.5, label = 'Zero-error line')
 
             RMSE = np.square(np.subtract(y_real[:, var], y_pred[:, var])).mean()
             RMSE2 = np.square(np.subtract(y_real2[:, var], y_pred2[:, var])).mean() 
-            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN with all bodies', color = color[3], marker = 'o', s = 10, zorder = 2)
-            ax[sbu2].scatter(y_real3[:, var], y_pred3[:, var], label = 'HNN asteroid in loss', color = color[5], marker = 'o', s = 10, zorder = 3)
-            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color[9], marker = 'o', s = 10, zorder =4)
+            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN with all bodies', color = color1[0], marker = 'o', s = 10, zorder = 2)
+            ax[sbu2].scatter(y_real3[:, var], y_pred3[:, var], label = 'HNN asteroid in loss', color = color1[2], marker = 'o', s = 10, zorder = 3)
+            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 'o', s = 10, zorder =4)
             # ax[sbu2].set_title("HNN RMSE = %0.2E, DNN RMSE = %0.2E, "%(RMSE, RMSE2), fontsize = 12)
 
             ax[sbu2].set_xlim(left = min(y_real[:, var]), right = max(y_real[:, var]))
-            ax[sbu2].set_ylim(bottom = min(y_pred[:, var]), top = max(y_pred[:, var]))
+            ax[sbu2].set_ylim(bottom = min(y_real[:, var]), top = max(y_real[:, var]))
             
-            ax[sbu2].set_xlabel(xlabel[int(var%3)]+" real  ($au/yr^2$)", fontsize = 23)
-            ax[sbu2].set_ylabel(xlabel[int(var%3)]+" predicted  ($au/yr^2$)", fontsize = 23)
             
+            # Normalize
+            if sbu == 0:
+                norm = 1e4
+                ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^4$ ($au/yr^2$)", fontsize = 32)
+                ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^4$ ($au/yr^2$)", fontsize = 32)
+            elif sbu == 1:
+                norm = 1e3
+                ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^3$ ($au/yr^2$)", fontsize = 32)
+                ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^3$ ($au/yr^2$)", fontsize = 32)
+            elif sbu == 2:
+                norm = 1
+                ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real ($au/yr^2$)", fontsize = 32)
+                ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted ($au/yr^2$)", fontsize = 32)
+            
+
             ticks = -np.log10(ax[sbu2].get_xticks())
             dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-            ax[sbu2].set_xticklabels(np.round(trunc(ax[sbu2].get_xticks(), decs = 5), decimals = dec+1), rotation = 20, fontsize = 18)
+            ax[sbu2].set_xticklabels(trunc(np.round(ax[sbu2].get_xticks()* norm, decimals = dec), decs = 4) , rotation = 40, fontsize = 27)
             # # ax[sbu2].set_xticklabels(trunc(ax[sbu2].get_xticks(), decs = 5), rotation = 20, fontsize = 14)
             ticks = -np.log10(ax[sbu2].get_yticks())
             dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-            ax[sbu2].set_yticklabels(np.round(trunc(ax[sbu2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 18)
-            
-            # ax[sbu2].set_yticklabels(trunc(ax[sbu2].get_yticks(), decs = 5), rotation = 0, fontsize = 14)
-            # ax[sbu2].xaxis.set_major_formatter(FormatStrFormatter('%.2E'))
-            # ax[sbu2].yaxis.set_major_formatter(FormatStrFormatter('%.2E'))
+            # ax[sbu2].set_yticklabels(np.round(trunc(ax[sbu2].get_yticks()* norm, decs = 2), decimals = 2) , rotation = 0, fontsize = 25)
+            ax[sbu2].set_yticklabels(trunc(np.round(ax[sbu2].get_yticks()* norm, decimals = dec), decs = 4) , rotation = 0, fontsize = 27)
+
             ax[sbu2].grid(alpha = 0.2)
 
         if sbu == 0:
-            ax[2].legend(fontsize = 20, framealpha = 0.9, bbox_to_anchor = (0.98,1.0))
+            lgnd = ax[0].legend(loc = 'lower left', fontsize = 28, \
+                framealpha = 0.9, bbox_to_anchor=(-0.0, 1.15, 3.7, 1.0),\
+                ncol=4, mode="expand", borderaxespad=0., handletextpad=0.)
 
-    plt.savefig(path_figure+'Error_HDN.png', dpi = 100)
+            lgnd.legendHandles[0]._sizes = [100]
+            lgnd.legendHandles[1]._sizes = [100]
+            lgnd.legendHandles[2]._sizes = [100]
+            lgnd.legendHandles[3]._sizes = [100]
+            # ax[2].legend(fontsize = 20, framealpha = 0.9, bbox_to_anchor = (0.99,0.62))
+            
+            
+    # plt.legend(loc = 'lower left', fontsize = 23, \
+    #             framealpha = 0.9, bbox_to_anchor=(-0.12, 1.02, 1.2, 1.5),\
+    #             ncol=4, mode="expand", borderaxespad=0., handletextpad=0.)
+
+    plt.savefig(path_figure+'Error_HDN.png', dpi = 100, bbox_inches='tight')
     plt.show() 
 
 def plot_prediction_error_HNNvsDNN_JS(path_figure, x, y_pred, y_real, x2, y_pred2, y_real2):
@@ -201,7 +230,7 @@ def plot_prediction_error_HNNvsDNN_JS(path_figure, x, y_pred, y_real, x2, y_pred
     """
     subplot2 = 3
     subplot1 = np.shape(y_pred)[1]//subplot2
-    fig = plt.figure(figsize = (15,10))
+    fig = plt.figure(figsize = (23,15))
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
     plt.subplots_adjust(left = 0.15, right = 0.98, wspace = 0.2, hspace=1.2, top = 0.9, bottom = 0.3)
 
@@ -220,8 +249,8 @@ def plot_prediction_error_HNNvsDNN_JS(path_figure, x, y_pred, y_real, x2, y_pred
 
             RMSE = np.square(np.subtract(y_real[:, var], y_pred[:, var])).mean()
             RMSE2 = np.square(np.subtract(y_real2[:, var], y_pred2[:, var])).mean() 
-            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color[3], marker = 'o', s = 15, zorder = 3)
-            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color[9], marker = 'x', s = 15, zorder =2)
+            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color1[0], marker = 'o', s = 15, zorder = 3)
+            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 'x', s = 15, zorder =2)
 
             ax[sbu2].set_xlim(left = min(y_real[:, var]), right = max(y_real[:, var]))
             ax[sbu2].set_ylim(bottom = min(y_pred[:, var]), top = max(y_pred[:, var]))
@@ -239,7 +268,9 @@ def plot_prediction_error_HNNvsDNN_JS(path_figure, x, y_pred, y_real, x2, y_pred
             ax[sbu2].grid(alpha = 0.2)
         
         if sbu == 0:
-            ax[0].legend(fontsize = 20)
+            lgnd = ax[0].legend(fontsize = 20)
+            lgnd.legendHandles[0]._sizes = [100]
+            lgnd.legendHandles[1]._sizes = [100]
 
     # plt.tight_layout()
     plt.savefig(path_figure+'Error_SJS.png', dpi = 100)
@@ -262,15 +293,16 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
     """
     subplot2 = 3
     subplot1 = np.shape(y_pred)[1]//subplot2
-    fig = plt.figure(figsize = (15,10))
+    fig = plt.figure(figsize = (23, 14))
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
-    plt.subplots_adjust(left = 0.15, right = 0.98, wspace = 0.2, hspace=0.2, top = 0.9, bottom = 0.3)
+    plt.subplots_adjust(wspace = 0.5, hspace=2.2)
 
-    xlabel = [r'$a_x$', r'$a_y$', r"$a_z$"]
+    xlabel = [r'ax', r'ay', r"az"]
     title = ['Jupiter', 'Saturn']
     for sbu in range(subplot1):
-        # subfigs[sbu].suptitle(title[sbu], fontsize = 17)
-        subfigs[sbu].subplots_adjust(wspace = 0.5)
+        subfigs[sbu].suptitle(title[sbu], fontsize = 35, x=0.41, y=.97, horizontalalignment='left')
+        # subfigs[sbu].subplots_adjust(wspace = 0.3, top = 0.89, bottom = 0.25)
+        subfigs[sbu].subplots_adjust(left = 0.07, right = 0.82, wspace = 0.4, hspace = 2.0, top = 0.89, bottom = 0.25)
         ax = subfigs[sbu].subplots(nrows=1, ncols=subplot2)
 
         for sbu2 in range(subplot2):
@@ -280,47 +312,57 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
 
             # RMSE = np.square(np.subtract(y_real[:, var], y_pred[:, var])).mean()
             # RMSE2 = np.square(np.subtract(y_real2[:, var], y_pred2[:, var])).mean() 
-            # ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color[3], marker = 'o', s = 15, zorder = 3)
-            # ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color[9], marker = 'x', s = 15, zorder =2)
-            ax[sbu2].scatter(y_real[:, var], y_pred[:, var]- y_real[:, var], label = 'HNN', color = color[3], marker = 'o', s = 15, zorder = 3)
-            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var]-y_real2[:, var], label = 'DNN', color = color[9], marker = 'x', s = 15, zorder =2)
+            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color1[0], marker = 'o', s = 18, zorder = 3)
+            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 'x', s = 18, zorder =2)
+            # ax[sbu2].scatter(y_real[:, var], ((y_pred[:, var]- y_real[:, var])/abs(y_real[:, var])), label = 'HNN', color = color[3], marker = 'o', s = 15, zorder = 3)
+            # ax[sbu2].scatter(y_real2[:, var], ((y_pred2[:, var]-y_real2[:, var])/abs(y_real2[:, var])), label = 'DNN', color = color[9], marker = 'x', s = 15, zorder =2)
 
-            # ax[sbu2].set_xlim(left = min(y_real[:, var]), right = max(y_real[:, var]))
-            # ax[sbu2].set_ylim(bottom = min(y_pred[:, var]), top = max(y_pred[:, var]))
             
-            ax[sbu2].set_xlabel(xlabel[int(var%3)]+" real  ($au/yr^2$)", fontsize = 23)
-            ax[sbu2].set_ylabel(xlabel[int(var%3)]+" predicted - "+xlabel[int(var%3)]+" real  ($au/yr^2$)", fontsize = 23)
+            ax[sbu2].set_xlabel(r"$%s_{real}  \;(au/yr^2)$"%xlabel[int(var%3)], fontsize = 32)
+            ax[sbu2].set_ylabel(r"$%s_{pred}\;(au/yr^2)$"%(xlabel[int(var%3)]), fontsize = 32)
+            # ax[sbu2].set_ylabel((xlabel[int(var%3)]+" pred - "+xlabel[int(var%3)]+" real)/"xlabel[int(var%3)]+" real)", fontsize = 23)
+            # ax[sbu2].set_ylabel(r"$(%s_{pred}-%s_{real}) \;/ \;%s_{real}$"%(xlabel[int(var%3)], xlabel[int(var%3)], xlabel[int(var%3)]), fontsize = 23)
+                # (xlabel[int(var%3)]+" pred - "+xlabel[int(var%3)]+" real)/"xlabel[int(var%3)]+" real)", fontsize = 23)
 
-            # ax[sbu2].set_xscale('symlog')
-            # ax[sbu2].set_yscale('symlog', linthresh = 7)
+            # ax[sbu2].set_xscale('log')
+            # ax[sbu2].set_yscale('log')
+            if sbu2 == 2:
+                ax[sbu2].set_xscale('symlog', linthresh = 1e-5)
+                ax[sbu2].set_yscale('symlog', linthresh = 1e-5)
+            else: 
+                ax[sbu2].set_xscale('symlog', linthresh = 1e-5)
+                ax[sbu2].set_yscale('symlog', linthresh = 1e-5)
             
-            if sbu == 0:
-                if sbu2 ==0 :
-                    ax[sbu2].set_ylim(bottom = -0.00015, top = 0.00015)
-                elif sbu2 == 1:
-                    ax[sbu2].set_ylim(bottom = -0.0001, top = 0.00017)
-            elif sbu == 1:
-                if sbu2 == 0:
-                    ax[sbu2].set_ylim(bottom = -0.0006, top = 0.0006)
-                elif sbu2 == 1:
-                    ax[sbu2].set_ylim(bottom = -0.0004, top = 0.0001)
+            # if sbu == 0:
+            #     if sbu2 ==0 :
+            #         ax[sbu2].set_ylim(bottom = -0.00015, top = 0.00015)
+            #     elif sbu2 == 1:
+            #         ax[sbu2].set_ylim(bottom = -0.0001, top = 0.00017)
+            # elif sbu == 1:
+            #     if sbu2 == 0:
+            #         ax[sbu2].set_ylim(bottom = -0.0006, top = 0.0006)
+            #     elif sbu2 == 1:
+            #         ax[sbu2].set_ylim(bottom = -0.0004, top = 0.0001)
 
+            
             ticks = -np.log10(abs(ax[sbu2].get_xticks()))
             dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )+1
-            ax[sbu2].set_xticklabels(np.round(trunc(ax[sbu2].get_xticks(), decs = 6), decimals = dec), rotation = 30, fontsize = 16)
-            # ax[sbu2].set_xticklabels(ax[sbu2].get_xticks(), rotation = 30, fontsize = 16)
-            # ax[sbu2].set_yticklabels(ax[sbu2].get_yticks(), rotation = 30, fontsize = 16)
+            ax[sbu2].set_xticklabels(np.round(trunc(ax[sbu2].get_xticks(), decs = 6), decimals = dec), rotation = 40, fontsize = 27)
             ticks = -np.log10(abs(ax[sbu2].get_yticks()))+1
             dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-            ax[sbu2].set_yticklabels(np.round(trunc(ax[sbu2].get_yticks(), decs = 6), decimals = dec), fontsize = 16)
+            ax[sbu2].set_yticklabels(np.round(trunc(ax[sbu2].get_yticks(), decs = 6), decimals = dec), fontsize = 27)
 
+            ax[sbu2].get_xaxis().set_major_formatter(plt.LogFormatter(10,  labelOnlyBase=False))
+            ax[sbu2].get_yaxis().set_major_formatter(plt.LogFormatter(10,  labelOnlyBase=False))
             ax[sbu2].grid(alpha = 0.2)
         
         if sbu == 0:
-            ax[0].legend(fontsize = 20)
+            lgnd = ax[0].legend(fontsize = 28)
+            lgnd.legendHandles[0]._sizes = [100]
+            lgnd.legendHandles[1]._sizes = [100]
 
     # plt.tight_layout()
-    plt.savefig(path_figure+'Error_SJS_dif.png', dpi = 100)
+    plt.savefig(path_figure+'Error_SJS_dif.png', dpi = 100, bbox_inches='tight')
     plt.show() 
 
 
