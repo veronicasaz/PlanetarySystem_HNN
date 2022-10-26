@@ -7,6 +7,9 @@ matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
 matplotlib.rcParams['axes.formatter.useoffset'] = False
 
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
+
+
 color1 = ['navy', 'dodgerblue','darkorange']
 color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
 
@@ -329,63 +332,63 @@ def plot_asteroids_NeurIPS():
     axes[0].plot(asteroids, t_num[:,1], color = color1[1],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
     axes[0].plot(asteroids, t_num[:,2], color = color1[2],  linestyle='-', linewidth = 2, marker = '^', markersize = 12,label = 'WH-HNN')
     
-    # t_1 = t_num[6, 0] / ((asteroids[6]+2) * np.log(asteroids[6]+2))  # First time is for 5 asteroids (+2 planets). time per operation
-    # axes[0].plot(asteroids, t_1 *((asteroids+2) * np.log(asteroids+2)) , color = 'blue', linewidth = 3, alpha = 0.5, linestyle = '--', label = 'N log(N)' )
-    # t_2 = t_num[5, 0] / (asteroids[5]+2)**2 
-    # axes[0].plot(asteroids, t_2 *((asteroids+2)**2) , color = 'black', linewidth = 3, alpha = 0.5, linestyle = '--', label = r'$N^2$' )
-    
-
-    # t_2 = t_num[5, 1] / (asteroids[5]+2)**2 
-    # axes[0].plot(asteroids, t_2 *((asteroids+2)**2) , color = 'blue', linewidth = 3, alpha = 0.5, linestyle = '--', label = r'$N^2$' )
-    # t_3 = t_num[4, 1] / (asteroids[4]+2)
-    # axes[0].plot(asteroids, t_3 *((asteroids+2)) , color = 'green', linewidth = 3, alpha = 0.5, linestyle = '--', label = r'$N$' )
-    axes[0].set_xlabel('Number of asteroids', fontsize = 22)
-    axes[0].set_ylabel('Computation time (s)', fontsize = 22)
+    axes[0].set_xlabel('Number of asteroids', fontsize = 28)
+    axes[0].set_ylabel('Computation time (s)', fontsize = 28)
     axes[0].set_xscale('log')
     axes[0].set_yscale('log')
     axes[0].grid(alpha = 0.5)
     
-    axes[0].tick_params(axis='both', which='major', labelsize=20)
-    axes[0].tick_params(axis='both', which='minor', labelsize=20)
-    # axes[0].tick_params(axis='y', labelcolor = color[3])
+    axes[0].tick_params(axis='both', which='major', labelsize=25)
+    axes[0].tick_params(axis='both', which='minor', labelsize=25)
+    axes[0].legend(fontsize = 22)
 
-    # ax = axes[0].twinx()
+    # ax2 = plt.axes([.65, .6, .2, .2])
+    # ax2.plot(asteroids[-2:], t_num[-2:, 0])
+    # plt.setp(ax2, xticks=[], yticks=[])
+    axins = axes[0].inset_axes([0.65, 0.05, 0.3, 0.35])
+    # sub region of the original image
+    axins.plot(asteroids[-3:], t_num[-3:,0], color = color1[0],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
+    axins.plot(asteroids[-3:], t_num[-3:,1], color = color1[1],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
+    axins.plot(asteroids[-3:], t_num[-3:,2], color = color1[2],  linestyle='-', linewidth = 2, marker = '^', markersize = 12,label = 'WH-HNN')
+
+    x1, x2, y1, y2 = (asteroids[-3]+asteroids[-4])/2, asteroids[-1]*1.1, 100, 7000
+    axins.set_xlim(x1, x2)
+    axins.set_ylim(y1, y2)
+    axins.set_yscale('linear')
+    axins.set_xticklabels(axes[0].get_xticks())
+    axins.set_yticklabels([])
+
+    axes[0].indicate_inset_zoom(axins, edgecolor="black")
+
+
+    # axins = zoomed_inset_axes(axes[0], zoom=0.001, loc='lower right')
+    # # axins.xaxis.get_major_locator().set_params(nbins=7)
+    # plt.setp(axins.get_xticklabels(), visible=True)
+    # plt.setp(axins.get_yticklabels(), visible=True)
+
+
     e_rel = abs( ( np.sum(e_energy[:,0,-10:], axis = 1)/10 - e_energy[:,0,0])  / e_energy[:,0,0] ) *1e5
     e_rel2 = abs( ( np.sum(e_energy[:,1,-10:], axis = 1)/10 - e_energy[:,1,0])  / e_energy[:,1,0] ) *1e5
     e_rel3 = abs( ( np.sum(e_energy[:,2,-10:], axis = 1)/10 - e_energy[:,2,0])  / e_energy[:,2,0] ) *1e5
-    # ax.plot(asteroids, e_rel, color = color[5], linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
-    # ax.plot(asteroids, e_rel2, color = color[5],  linestyle=':',  linewidth = 2, marker = 'x', markersize = 10,label = 'HNN')
-    # ax.plot(asteroids, e_rel3, color = color[5], linestyle='--',   linewidth = 2, marker = '^', markersize = 10,label = 'WH-HNN')
-
-    # ax.set_ylabel('Relative final energy error', fontsize = 22, color = color[5])
-    # ax.set_yscale('symlog', linthresh = 0.000004)
-    # ax.set_xscale('log')
-
-    # ax.tick_params(axis='y', which='major', labelsize=20)
-    # ax.tick_params(axis='y', which='minor', labelsize=20)
-    # ax.tick_params(axis='y', labelcolor = color[5])
-
-    axes[0].legend(fontsize = 22)
-
 
     axes[1].plot(asteroids, t_num[:,1] -t_num[:,0], color = color1[0], linestyle = '--')
     axes[1].plot(asteroids, t_num[:,2] -t_num[:,0], color = color1[0], linestyle = '-')
     axes[1].plot([], [], color = 'black', linestyle = '--', label = 'HNN')
     axes[1].plot([], [], color = 'black', linestyle = '-', label = 'WH-HNN ')
-    axes[1].set_xlabel('Number of asteroids', fontsize = 22)
-    axes[1].set_ylabel(r'$t - t_{WH}$ (s)', fontsize = 22, color = color1[0])
+    axes[1].set_xlabel('Number of asteroids', fontsize = 28)
+    axes[1].set_ylabel(r'$t - t_{WH}$ (s)', fontsize = 28, color = color1[0])
     axes[1].set_xscale('log')
     axes[1].set_yscale('symlog', linthresh = 1)
-    axes[1].tick_params(axis='both', which='major', labelsize=20)
-    axes[1].tick_params(axis='both', which='minor', labelsize=20)
+    axes[1].tick_params(axis='both', which='major', labelsize=25)
+    axes[1].tick_params(axis='both', which='minor', labelsize=25)
     axes[1].tick_params(axis='y', labelcolor = color1[0])
 
     ax2 = axes[1].twinx()
     ax2.plot(asteroids, e_rel2-e_rel, linestyle = '--',color = color1[2])
     ax2.plot(asteroids, e_rel3-e_rel, linestyle = '-',color = color1[2])
-    ax2.set_ylabel(r'$\varepsilon - \varepsilon_{WH} \; _{(\times1e5)}$ ', fontsize = 22, color = color1[2])
-    ax2.tick_params(axis='y', which='major', labelsize=20)
-    ax2.tick_params(axis='y', which='minor', labelsize=20)
+    ax2.set_ylabel(r'$\varepsilon - \varepsilon_{WH} \; _{(\times1e5)}$ ', fontsize = 28, color = color1[2])
+    ax2.tick_params(axis='y', which='major', labelsize=25)
+    ax2.tick_params(axis='y', which='minor', labelsize=25)
     ax2.tick_params(axis='y', labelcolor = color1[2])
     axes[1].legend(fontsize = 22, loc = 'lower left', labelcolor = 'black')
     axes[1].grid(alpha = 0.5)

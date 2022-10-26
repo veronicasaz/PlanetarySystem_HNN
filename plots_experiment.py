@@ -30,12 +30,12 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 matplotlib.rcParams['axes.formatter.useoffset'] = False
 
 # Setup rebound 
-sr = rebound.Simulation()
-sr.units = {'yr', 'au', 'MSun'}
-sr.add('Sun')
-sr.add('Jupiter')
-sr.add('Saturn')
-sr.save('ic_sun_jupiter_saturn.bin')
+# sr = rebound.Simulation()
+# sr.units = {'yr', 'au', 'MSun'}
+# sr.add('Sun')
+# sr.add('Jupiter')
+# sr.add('Saturn')
+# sr.save('ic_sun_jupiter_saturn.bin')
 
 color1 = ['navy', 'dodgerblue','darkorange']
 color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
@@ -293,6 +293,8 @@ def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name, R):
 
     sim3.buf.recorder.data.keys()
     t_dnn = time.time() - t0_dnn
+
+    np.savetxt("./Experiments/sun_jupiter_saturn/computationTime.txt", [t_num, t_nn, t_dnn])
 
     print("Time WH: %.3f, Time ANN: %.3f"%(t_num, t_nn))
     return sim, sim2, sim3, [t_num, t_nn, t_dnn]
@@ -705,46 +707,35 @@ def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelera
             a_ANN[item] = np.linalg.norm(accelerations_ANN_noflag[item, plot*3:plot*3+3])
             a_DNN[item] = np.linalg.norm(accelerations_ANN_flag[item, plot*3:plot*3+3])
         
-        axes[0, plot-2].plot(x, a_WH, color = color1[0], label = 'WH')
-        axes[1, plot-2].plot(x, a_ANN, color = color1[1], label = 'Without flags')
-        axes[2, plot-2].plot(x, a_DNN, color = color1[2], label = 'With flags')
+        l1, = axes[0, plot-2].plot(x, a_WH, color = color1[0], label = 'WH')
+        l2, = axes[1, plot-2].plot(x, a_ANN, color = color1[1], label = 'Without flags')
+        l3, = axes[2, plot-2].plot(x, a_DNN, color = color1[2], label = 'With flags')
         
         index_DNN = np.where(flags[:, plot] == 0)[0]
         x2_DNN = np.copy(x)
         x2_DNN = np.delete(x2_DNN, index_DNN)
-        axes[2, plot-2].scatter(x2_DNN, np.delete(a_DNN, index_DNN), color = color1[2], label = 'Numerically')
+        l4 = axes[2, plot-2].scatter(x2_DNN, np.delete(a_DNN, index_DNN), color = color1[2], label = 'Numerically')
         axes[0,plot-2].set_title(names[plot-1], fontsize = 24)
         
-        # ticks = -np.log10(axes[0,plot-2].get_yticks())
-        # dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-        # axes[0,plot-2].set_yticklabels(np.round(trunc(axes[0,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
-        # axes[0,plot-2].set_xticklabels(np.round(trunc(axes[0,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
-
-        # ticks = -np.log10(axes[1,plot-2].get_yticks())
-        # dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-        # axes[1,plot-2].set_yticklabels(np.round(trunc(axes[1,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
-        # axes[1,plot-2].set_xticklabels(np.round(trunc(axes[1,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 14)
-        
-        axes[2,plot-2].set_xlabel('$t$ (yr)', fontsize = 22)
-        # axes[2,plot-2].set_ylabel('a ($au/yr^2$)', fontsize = 24)
-        # axes[2,plot-1].set_title(names[plot-1])
+        axes[2,plot-2].set_xlabel('$t$ (yr)', fontsize = 28)
         axes[2,plot-2].annotate("Flags: %i / %i"%(np.count_nonzero(flags[:, plot]), len(accelerations_ANN_flag)), \
-                xy =  (x[int(len(x)//2)]*1.27, max((a_DNN))*0.92), fontsize = 15)
+                xy =  (x[0]+0.9, max((a_DNN))*0.9), fontsize = 20)
         
         for iterate in range(3):
             axes[iterate,plot-2].grid(alpha = 0.5)        
             ticks = -np.log10(axes[iterate,plot-2].get_yticks())
             dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-            axes[iterate,plot-2].set_yticklabels(np.round(trunc(axes[iterate,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
-            axes[iterate,plot-2].set_xticklabels(np.round(trunc(axes[iterate,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
-            axes[iterate,0].set_ylabel('a ($au/yr^2$)', fontsize = 22)
-            axes[iterate,0].legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
-    # axes[0,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
-    # axes[1,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
-    # axes[2,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
+            axes[iterate,plot-2].set_yticklabels(np.round(trunc(axes[iterate,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 20)
+            axes[iterate,plot-2].set_xticklabels(np.round(trunc(axes[iterate,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 20)
+            axes[iterate,0].set_ylabel('a ($au/yr^2$)', fontsize = 28)
+            # axes[iterate,0].legend(loc = 'upper left', framealpha = 0.5, fontsize = 24)
+    
+    lgnd = axes[0,0].legend([l1, l2, l3, l4], ['WH', 'Without flags', 'With flags', 'Flags'], loc = 'lower left', fontsize = 23, \
+                framealpha = 0.9, bbox_to_anchor=(0.1, 1.3, 3.3, 1.0),\
+                ncol=4, mode="expand", borderaxespad=0., handletextpad=0.3)
 
     # plt.tight_layout()
-    plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagcomparison.png' % t_end)
+    plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagcomparison.png' % t_end, bbox_inches='tight')
     plt.show()
 
 def plot_accel_flagvsR(accel_i, accelerations_baseline,\
@@ -776,8 +767,8 @@ def plot_accel_flagvsR(accel_i, accelerations_baseline,\
     
     # fig, axes = plt.subplots(1,3, figsize=(15,6))
     # fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.4, wspace= 0.25)
-    fig = plt.figure(figsize = (15, 6), constrained_layout = True)
-    gs = GridSpec(2, 3, figure = fig, height_ratios= [2, 1])
+    fig = plt.figure(figsize = (15, 8), constrained_layout = True)
+    gs = GridSpec(2, 3, figure = fig, height_ratios= [2, 1.2])
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1])
     ax3 = fig.add_subplot(gs[0, 2])
@@ -798,44 +789,44 @@ def plot_accel_flagvsR(accel_i, accelerations_baseline,\
     accel = [a_1, a_2, a_3]
         
     for plot in range(3):
-        axes[plot].plot(x, a_baseline, color = color1[8], alpha = 0.5, linewidth = 6, label = 'Numerical result')
-        axes[plot].plot(x, accel[plot], color = color[3], label = 'R = %0.1f'%R[plot])
-    # axes[1].plot(x, a_ANN, color = color[9], label = 'Without flags')
-    # axes[2].plot(x, a_DNN, color = color[5], label = 'With flags')
+        # axes[plot].plot(x, a_baseline, color = color1[1], linewidth = 3, linestyle = ':', label = 'Numerical result')
+        axes[plot].plot(x, accel[plot], color = color1[0], label = 'WH-HNN')
         flags = flags_i[plot]
         index_DNN = np.where(flags[:, 3] == 0)[0]
         x2_DNN = np.copy(x)
         x2_DNN = np.delete(x2_DNN, index_DNN)
-        axes[plot].scatter(x2_DNN, np.delete(accel[plot], index_DNN), color = color[5], label = 'Flags')
+        axes[plot].scatter(x2_DNN, np.delete(accel[plot], index_DNN), color = color1[2], label = 'Flags')
         # axes[plot].set_title(names[plot-1], fontsize = 24)
     
-        axes[plot].set_xlabel('$t$ (yr)', fontsize = 22)
+        axes[plot].set_title( 'R = %0.1f'%R[plot], fontsize = 24)
+        axes[plot].set_xlabel('$t$ (yr)', fontsize = 25)
         axes[plot].annotate("Flags: %i / %i"%(np.count_nonzero(flags[:, 3]), len(accelerations_ANN_flag)), \
-            xy =  (x[int(len(x)//2)]*1.27, max((accel[plot]))*0.92), fontsize = 15)
+            xy =  (x[len(x)//2]-5, max((accel[plot]))*0.92), fontsize = 20)
     
         axes[plot].grid(alpha = 0.5)        
         ticks = -np.log10(axes[plot].get_yticks())
         dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-        axes[plot].set_yticklabels(np.round(trunc(axes[plot].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
-        axes[plot].set_xticklabels(np.round(trunc(axes[plot].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
-        axes[plot].legend(loc = 'upper left', fontsize = 16)
+        axes[plot].set_yticklabels(np.round(trunc(axes[plot].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 20)
+        axes[plot].set_xticklabels(np.round(trunc(axes[plot].get_xticks(), decs = 2), decimals = dec+1), rotation = 0, fontsize = 20)
+        
+        # axes[plot].legend(loc = 'upper left', fontsize = 16)
 
-    axes[0].set_ylabel('a ($au/yr^2$)', fontsize = 22)
+    axes[0].set_ylabel('a ($au/yr^2$)', fontsize = 25)
+    lgnd = axes[0].legend(loc = 'lower left', fontsize = 23, \
+                framealpha = 0.9, bbox_to_anchor=(0.0, 1.2, 1.0, 1.0),\
+                ncol=4, mode="expand", borderaxespad=0., handletextpad=0.3)
 
-    axes[3].plot(R_i, t_i, marker = 'o', color = color[3])
-    axes[3].set_xlabel('R', fontsize = 22)
-    axes[3].set_ylabel('Computation time (s)', fontsize = 22)
+    axes[3].plot(R_i, t_i, marker = 'o', color = color1[0])
+    axes[3].set_xlabel('R', fontsize = 25)
+    axes[3].set_ylabel('Comput. time (s)', fontsize = 25)
     axes[3].grid(alpha = 0.5)        
     ticks = -np.log10(axes[3].get_yticks())
     dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
-    axes[3].set_yticklabels(np.round(trunc(axes[3].get_yticks(), decs = 6), decimals = dec+3), rotation = 0, fontsize = 16)
-    axes[3].set_xticklabels(np.round(trunc(axes[3].get_xticks(), decs = 6), decimals = 5), rotation = 0, fontsize = 16)
-    # axes[0,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
-    # axes[1,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
-    # axes[2,2].legend(bbox_to_anchor=(1.0, 1.0), framealpha = 0.5, fontsize = 14)
+    axes[3].set_yticklabels(np.round(trunc(axes[3].get_yticks(), decs = 6), decimals = dec+3), rotation = 0, fontsize = 20)
+    axes[3].set_xticklabels(np.round(trunc(axes[3].get_xticks(), decs = 6), decimals = dec+4), rotation = 0, fontsize = 20)
 
     # plt.tight_layout()
-    plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagR.png' % t_end)
+    plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagR.png' % t_end, bbox_inches='tight')
     plt.show()
 
 
@@ -1195,8 +1186,8 @@ def plot_accel_flagvsR_energy2(accel_i, energy_i, time_i, flags_i, asteroids, as
     # axes.set_yticklabels(np.round(trunc(axes.get_yticks(), decs = 8), decimals = dec+1), rotation = 0, fontsize = 16)
     
     ticks = -np.log10(axes.get_xticks())
-    dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) ) +1
-    axes.set_xticklabels(np.round(trunc(axes.get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 16)
+    dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+    axes.set_xticklabels(np.round(trunc(axes.get_xticks(), decs = 2), decimals = dec+1), rotation = 0, fontsize = 16)
     # axes.legend(loc = 'upper left', framealpha = 0.5, fontsize = 16)
 
 
@@ -1317,10 +1308,10 @@ def plot_errorPhaseOrbit(theta_JS, E_accel):
 
 if __name__ == "__main__":
     h = 1e-1
-    multiple = 'JS'
-    # multiple = 'Asteroid_JS'
+    # multiple = 'JS'
+    multiple = 'Asteroid_JS'
     
-    run = 2.5
+    run = 4
     if run == 1:
         if multiple == 'JS':
             t_end = 5000
@@ -1344,6 +1335,9 @@ if __name__ == "__main__":
         sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)            
         plot_energyvsH(sim, sim2)
     elif run == 2: 
+        """
+        Flag vs no flag
+        """
         t_end = 30
         asteroids = 1
         asteroids_extra = 1
@@ -1374,6 +1368,9 @@ if __name__ == "__main__":
                     flags, [t, t_f], asteroids, asteroids_extra)
 
     elif run == 3:
+        """
+        R vs N flags and computation time
+        """
         multiple = 'Asteroid_JS'
         t_end = 50
         asteroids = 50
@@ -1381,7 +1378,7 @@ if __name__ == "__main__":
         ##########################################
         # Test flag vs no flag
         ##########################################
-        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)
+        # sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)
 
         accelerations_WH = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
 
@@ -1404,6 +1401,7 @@ if __name__ == "__main__":
             accelerations_DNN_flag = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txt")
             flags = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txtflag_list.txt")
             flags_DNN = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txtflag_list.txt")
+            t_f = np.loadtxt("./Experiments/sun_jupiter_saturn/computationTime.txt")
 
             flag_n[flag_R, 1:] = np.sum(flags, axis = 0 )
             flag_dnn[flag_R, 1:] = np.sum(flags_DNN, axis = 0 )
