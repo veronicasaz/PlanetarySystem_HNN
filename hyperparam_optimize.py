@@ -39,8 +39,8 @@ tf.random.set_seed(1234)
 tf.keras.backend.set_floatx('float64')
 
 
-color = [ 'skyblue','royalblue', 'blue', 'navy','slateblue', 'coral', 'salmon',\
-    'orange', 'burlywood', 'lightgreen', 'olivedrab','darkcyan' ]
+color1 = ['navy', 'dodgerblue','darkorange']
+color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
 
 # Activation function
 def loss_weight_mse(x, y, y_pred, w):
@@ -543,46 +543,36 @@ def plot_optim(data, N):
         loss[net, 0] = data_t[0, -1]
         loss[net, 1] = data_t[1, -1]
 
-    # netsize = 12*params[:, 2] + params[:, 2]*params[:, 1]
     D_samples = np.hstack((loss, params[0:N,:]))
-    # D_samples = D[D[:, 2].argsort()]
-    # D_layers = D[D[:, 3].argsort()]
-    # D_neurons = D[D[:, 4].argsort()]
 
     
     subplot2 = 1
     subplot1 = 1
     fig, ax = plt.subplots(subplot1, subplot2, figsize=(12,6))
     
-    # cm = plt.cm.get_cmap('jet')
-    # sc = ax.scatter(params[:, 1], params[:, 2], s = 60, marker = 'o', c = loss[:, 0], norm=plc.LogNorm(), cmap =  cm)
-    # ax.scatter(params[:, 1], params[:, 2], s = 30, marker = 'x', c = loss[:, 1], norm=plc.LogNorm(), cmap =  cm)
-    # pcm = plt.colorbar(sc)
-
     plt.subplot(subplot1, subplot2, 1)
     index = np.where(D_samples[:, 0] == np.min(D_samples[:, 0]))[0]
     index_val = np.where(D_samples[:, 1] == np.min(D_samples[:, 1]))[0]
-    # plt.plot(D_samples[:, 2], D_samples[:, 0], marker = 'o', label = 'train loss')
-    # plt.plot(D_samples[:, 2], D_samples[:, 1], marker = 'x', label = 'val loss')
-    plt.scatter(D_samples[:, 0], D_samples[:, 1], s = 120, marker = 'o' , color = color[3])
+    plt.scatter(D_samples[:, 0], D_samples[:, 1], s = 150, marker = 'o' , color = color2[1])
+    
     label1 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f\n"%(D_samples[index, 2],\
         D_samples[index, 3], D_samples[index, 4], D_samples[index, 5])
     label2 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f"%(D_samples[index_val, 2],\
         D_samples[index_val, 3], D_samples[index_val, 4], D_samples[index_val, 5])
-    plt.scatter(D_samples[index, 0], D_samples[index, 1], s = 250, color = color[9], marker = 's' , label = label1)
-    plt.scatter(D_samples[index_val, 0], D_samples[index_val, 1], s = 250, color =color[5], marker = 's' , label = label2)
+    plt.scatter(D_samples[index, 0], D_samples[index, 1], s = 250, color = color2[0], marker = 's' , label = label1)
+    plt.scatter(D_samples[index_val, 0], D_samples[index_val, 1], s = 250, color =color2[2], marker = 's' , label = label2)
 
     # plt.title('Results of hyperparameter optimization', fontsize = 22)
-    legend = plt.legend(fontsize = 25, bbox_to_anchor=(1.0, 1.0))
+    legend = plt.legend(fontsize = 26, bbox_to_anchor=(1.0, 1.0))
     # legend = plt.legend(fontsize = 12, title = 'Number of training samples, layers, neurons per layer, ratio of neurons, initial learning rate, \nlearning rate decay, learning rate steps')
     # legend.get_title().set_fontsize('15')
     plt.grid(alpha = 0.5)
     # plt.axis('equal')
 
-    plt.xlabel("Train loss", fontsize = 27)
-    plt.ylabel("Validation loss", fontsize = 27)
-    plt.xticks(fontsize = 25)
-    plt.yticks(fontsize = 25)
+    plt.xlabel("Train loss", fontsize = 30)
+    plt.ylabel("Validation loss", fontsize = 30)
+    plt.xticks(fontsize = 28)
+    plt.yticks(fontsize = 28)
     plt.xscale('log')
     plt.yscale('log')
     plt.tight_layout()

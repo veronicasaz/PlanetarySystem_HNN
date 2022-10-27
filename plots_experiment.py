@@ -20,7 +20,8 @@ from data import load_json
 from nn_tensorflow import  ANN
 
 from plots_papers import plot_NeurIPS, plot_NeurIPS_energyTogether, \
-                plot_asteroids_NeurIPS, polifit, plot_CompPhys_trajectory
+                plot_asteroids_NeurIPS, polifit, plot_CompPhys_trajectory,\
+                plot_CompPhys_trajectory_JS
 
 import matplotlib
 from test_dataset import trunc
@@ -30,12 +31,12 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 matplotlib.rcParams['axes.formatter.useoffset'] = False
 
 # Setup rebound 
-# sr = rebound.Simulation()
-# sr.units = {'yr', 'au', 'MSun'}
-# sr.add('Sun')
-# sr.add('Jupiter')
-# sr.add('Saturn')
-# sr.save('ic_sun_jupiter_saturn.bin')
+sr = rebound.Simulation()
+sr.units = {'yr', 'au', 'MSun'}
+sr.add('Sun')
+sr.add('Jupiter')
+sr.add('Saturn')
+sr.save('ic_sun_jupiter_saturn.bin')
 
 color1 = ['navy', 'dodgerblue','darkorange']
 color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
@@ -190,7 +191,7 @@ def add_particles(sim, asateroids, asteroids_extra):
     # a_a = [3.2] # for flag vs no flag
 
     m_a_e = np.array([1e18, 1e19, 5e19, 1e21]) / 1.9891e30
-    a_a_e = [4.0, 1.0, 1.5] #AU
+    a_a_e = [1.8, 1.0, 4.0] #AU
     
 
     for i, p in enumerate(sr.particles): # Planets
@@ -1308,24 +1309,28 @@ def plot_errorPhaseOrbit(theta_JS, E_accel):
 
 if __name__ == "__main__":
     h = 1e-1
-    # multiple = 'JS'
-    multiple = 'Asteroid_JS'
+    multiple = 'JS'
+    # multiple = 'Asteroid_JS'
     
-    run = 4
+    run = 1
     if run == 1:
         if multiple == 'JS':
-            t_end = 5000
+            t_end = 50
             asteroids = 0
             asteroids_extra = 0
         else:
             t_end = 100
-            asteroids = 3
-            asteroids_extra = 0
+            asteroids = 2
+            asteroids_extra = 1
         ##########################################
         # General
         ##########################################
-        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)            
-        plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_extra, typePlot = multiple)
+        sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)   
+        if multiple == 'JS':
+            plot_CompPhys_trajectory_JS(sim, sim2, sim3, t, t_end, asteroids, asteroids_extra, typePlot = multiple)
+            # plot_general_printversion(sim, sim2, sim3, t, asteroids, asteroids_extra, multiple)
+        else:         
+            plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_extra, typePlot = multiple)
         # plot_NeurIPS_energyTogether(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot = multiple)
     elif run == 2.5:
         multiple = 'JS'

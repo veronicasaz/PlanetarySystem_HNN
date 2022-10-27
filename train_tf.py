@@ -206,8 +206,8 @@ if __name__ == "__main__":
     settings = {**settings_dataset, **settings}
 
     # Choose case
-    # name = 'JS'
-    name = 'asteroid'
+    name = 'JS'
+    # name = 'asteroid'
 
     ####### GET DATA ###########
     # Only 1 of the 2 necessary

@@ -312,14 +312,14 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
 
             # RMSE = np.square(np.subtract(y_real[:, var], y_pred[:, var])).mean()
             # RMSE2 = np.square(np.subtract(y_real2[:, var], y_pred2[:, var])).mean() 
-            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color1[0], marker = 'o', s = 18, zorder = 3)
-            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 'x', s = 18, zorder =2)
+            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color1[0], marker = 'o', s = 50, zorder = 3)
+            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 's', s = 50, zorder =2)
             # ax[sbu2].scatter(y_real[:, var], ((y_pred[:, var]- y_real[:, var])/abs(y_real[:, var])), label = 'HNN', color = color[3], marker = 'o', s = 15, zorder = 3)
             # ax[sbu2].scatter(y_real2[:, var], ((y_pred2[:, var]-y_real2[:, var])/abs(y_real2[:, var])), label = 'DNN', color = color[9], marker = 'x', s = 15, zorder =2)
 
             
-            ax[sbu2].set_xlabel(r"$%s_{real}  \;(au/yr^2)$"%xlabel[int(var%3)], fontsize = 32)
-            ax[sbu2].set_ylabel(r"$%s_{pred}\;(au/yr^2)$"%(xlabel[int(var%3)]), fontsize = 32)
+            ax[sbu2].set_xlabel(r"$%s_{real}  \;(au/yr^2)$"%xlabel[int(var%3)], fontsize = 35)
+            ax[sbu2].set_ylabel(r"$%s_{pred}\;(au/yr^2)$"%(xlabel[int(var%3)]), fontsize = 35)
             # ax[sbu2].set_ylabel((xlabel[int(var%3)]+" pred - "+xlabel[int(var%3)]+" real)/"xlabel[int(var%3)]+" real)", fontsize = 23)
             # ax[sbu2].set_ylabel(r"$(%s_{pred}-%s_{real}) \;/ \;%s_{real}$"%(xlabel[int(var%3)], xlabel[int(var%3)], xlabel[int(var%3)]), fontsize = 23)
                 # (xlabel[int(var%3)]+" pred - "+xlabel[int(var%3)]+" real)/"xlabel[int(var%3)]+" real)", fontsize = 23)

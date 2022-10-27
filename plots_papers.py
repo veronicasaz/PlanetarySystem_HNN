@@ -11,7 +11,8 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 
 color1 = ['navy', 'dodgerblue','darkorange']
-color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
+# color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
+color2 = ['dodgerblue', 'navy', 'saddlebrown', 'darkorange', 'olivedrab']
 
 def plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot):
     """
@@ -212,7 +213,7 @@ def plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_ext
     asteroids += asteroids_extra
     t_num, t_nn, t_dnn = t
 
-    fig, axes = plt.subplots(3,3, figsize=(19,10))
+    fig, axes = plt.subplots(2,3, figsize=(20,10))
     data_nb = sim.buf.recorder.data
     data_nih = sim2.buf.recorder.data
     data_dnn = sim3.buf.recorder.data
@@ -223,83 +224,139 @@ def plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_ext
     for j in range(asteroids):
         names.append("Asteroid %i"%(j+1))
 
-    labelsize = 22
-    titlesize = 24
+    labelsize = 29
+    titlesize = 27
     # line = ['-', '--', '-.', ':', '-', '--', '-.', ':','-', '--', '-.', ':','-', '--', '-.', ':']
     line = ['-', '-',  '-', '-', '-','-', '-', '-', '-','-', '-', '-', '-']
     lnwidth = 3
+    
+    for i in range(1, data_nih['x'].shape[1]):
+        axes[0,0].plot(data_nb['x'][:,i], data_nb['y'][:,i], linestyle = line[i], linewidth = lnwidth, color = color2[i-1], label=names[i])
+        axes[0,1].plot(data_nih['x'][:,i], data_nih['y'][:,i], linestyle = line[i],linewidth = lnwidth, color = color2[i-1], label=names[i])
+        axes[0,2].plot(data_dnn['x'][:,i], data_dnn['y'][:,i], linestyle = line[i], linewidth = lnwidth,color = color2[i-1], label=names[i])
+        
+        # eccentricity in the second column
+        axes[1,0].plot(time, data_nb['ecc'][:,i], linestyle = line[i],  color = color2[i-1], linewidth = lnwidth, label=names[i])
+        axes[1,1].plot(time, data_nih['ecc'][:,i], linestyle = line[i],  color = color2[i-1], linewidth = lnwidth, label=names[i])
+        axes[1,2].plot(time, data_dnn['ecc'][:,i], linestyle = line[i],  color = color2[i-1],linewidth = lnwidth,  label=names[i])            
+
+    axes[0,0].set_title("Numerical integrator result", fontsize = titlesize)
+    axes[0,1].set_title("Hamiltonian Neural Network result", fontsize = titlesize)
+    axes[0,2].set_title("Deep Neural Network result", fontsize = titlesize)
+
+    for col in range(3):
+        axes[0,col].scatter(data_nb['x'][:,0], data_nb['y'][:,0], linestyle = line[0], s = 20, color = 'black', label=names[0])
+        axes[0,col].axis('equal')
+        axes[0,col].set_xlabel('$x$ (au)',fontsize = labelsize)
+        axes[0,col].set_ylabel('$y$ (au)',fontsize = labelsize)
+        
+        axes[1,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
+        axes[1,col].set_ylabel('$e$',fontsize = labelsize)
+
+    axes[0,0].legend(loc = 'lower left', fontsize = 27, \
+                framealpha = 0.9, bbox_to_anchor=(0.0, 1.22, 3.5, 1.5),\
+                ncol=6, mode="expand", borderaxespad=0.)
+
+    for i in range(2):
+        for j in range(3):
+            axes[i,j].tick_params(axis='both', which='major', labelsize=25)
+            axes[i,j].tick_params(axis='both', which='minor', labelsize=25)
+            axes[i, j].locator_params(axis = 'x', nbins=6)
+            axes[i, j].locator_params(axis = 'y', nbins=6)
+
+    plt.tight_layout()
+    plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.pdf' % t_end)
+    plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.png' % t_end)
+    plt.show()
+
+def plot_CompPhys_trajectory_JS(sim, sim2, sim3, t, t_end, asteroids, asteroids_extra, typePlot):
+    """
+    plot_general: plot simulation with WH, HNN and DNN only 3 columns
+    INPUTS:
+        sim, sim2, sim3: simulations for WH, HNN and DNN
+        t: computation time for WH, HNN and DNN
+        asteroids: number of asteroids
+        asteroids_extra: number of extrapolation asteroids
+    """
+    ########################################################
+    #### Plots together
+    ########################################################
+    asteroids += asteroids_extra
+    t_num, t_nn, t_dnn = t
+
+    fig, axes = plt.subplots(3,3, figsize=(19,12))
+    data_nb = sim.buf.recorder.data
+    data_nih = sim2.buf.recorder.data
+    data_dnn = sim3.buf.recorder.data
+    time = np.linspace(0, t_end, data_nih['x'].shape[0])
+
+    # Add names of asteroids
+    names = ['Sun', 'Jupiter', 'Saturn']
+    for j in range(asteroids):
+        names.append("Asteroid %i"%(j+1))
+
+    labelsize = 29
+    titlesize = 27
+    # line = ['-', '--', '-.', ':', '-', '--', '-.', ':','-', '--', '-.', ':','-', '--', '-.', ':']
+    line = ['-', '-',  '-', '-', '-','-', '-', '-', '-','-', '-', '-', '-']
+    lnwidth = 3
+    
+    for col in range(3):
+        axes[0,col].scatter(data_nb['x'][:,0], data_nb['y'][:,0], linestyle = line[0], s = 20, color = 'black', label=names[0])
+
     for i in range(1, data_nih['x'].shape[1]):
         # coordinates in the first column
-        axes[0,0].set_title("Numerical integrator result: %.1f s"%(t_num), fontsize = titlesize)
-        axes[0,1].set_title("Hamiltonian Neural Network result: %.1f s"%(t_nn), fontsize = titlesize)
-        axes[0,2].set_title("Deep Neural Network result: %.1f s"%(t_dnn), fontsize = titlesize)
-
-        axes[0,0].plot(data_nb['x'][:,i], data_nb['y'][:,i], linestyle = line[i], linewidth = lnwidth, color = color2[i-1], label=names[i])
-        axes[0,0].axis('equal')
-        axes[0,0].set_xlabel('$x$',fontsize = labelsize)
-        axes[0,0].set_ylabel('$y$',fontsize = labelsize)
-        # axes[0,0].legend(loc = 'upper right', fontsize = 16, framealpha = 0.9)
-        # axes[0,0].legend(bbox_to_anchor=(-0.85, 1.05), loc = 'upper left', fontsize = 20, framealpha = 0.9)
-        if typePlot == 'JS':
-            axes[0,0].legend(loc = 'lower left', fontsize = 22, \
-                framealpha = 0.9, bbox_to_anchor=(0.0, 1.22, 0.9, 1.5),\
-                ncol=5, mode="expand", borderaxespad=0.)
-        else:
-            axes[0,0].legend(loc = 'lower left', fontsize = 22, \
-                framealpha = 0.9, bbox_to_anchor=(0.5, 1.22, 2.7, 1.5),\
-                ncol=5, mode="expand", borderaxespad=0.)
-        
+        axes[0,0].plot(data_nb['x'][:,i], data_nb['y'][:,i], linestyle = line[i], linewidth = lnwidth, color = color2[i-1], label=names[i])        
         axes[0,1].plot(data_nih['x'][:,i], data_nih['y'][:,i], linestyle = line[i],linewidth = lnwidth, color = color2[i-1], label=names[i])
-        axes[0,1].axis('equal')
-        axes[0,1].set_ylabel('$y$',fontsize = labelsize)
-        axes[0,1].set_xlabel('$x$',fontsize = labelsize)
         axes[0,2].plot(data_dnn['x'][:,i], data_dnn['y'][:,i], linestyle = line[i], linewidth = lnwidth,color = color2[i-1], label=names[i])
-        axes[0,2].axis('equal')
-        axes[0,2].set_ylabel('$y$',fontsize = labelsize)
-        axes[0,2].set_xlabel('$x$',fontsize = labelsize)
 
         # eccentricity in the second column
         axes[1,0].plot(time, data_nb['ecc'][:,i], linestyle = line[i],  color = color2[i-1], linewidth = lnwidth, label=names[i])
-        axes[1,0].set_xlabel('$t$ [years]',fontsize = labelsize)
-        axes[1,0].set_ylabel('$e$',fontsize = labelsize)
         axes[1,1].plot(time, data_nih['ecc'][:,i], linestyle = line[i],  color = color2[i-1], linewidth = lnwidth, label=names[i])
-        axes[1,1].set_ylabel('$e$',fontsize = labelsize)
-        axes[1,1].set_xlabel('$t$ [years]',fontsize = labelsize)
-        axes[1,2].plot(time, data_dnn['ecc'][:,i], linestyle = line[i],  color = color2[i-1],linewidth = lnwidth,  label=names[i])
-        axes[1,2].set_ylabel('$e$',fontsize = labelsize)
-        axes[1,2].set_xlabel('$t$ [years]',fontsize = labelsize)
-                
+        axes[1,2].plot(time, data_dnn['ecc'][:,i], linestyle = line[i],  color = color2[i-1],linewidth = lnwidth,  label=names[i])            
+
     # energy drift in the second column
-    color_e = color2[5]
-    color_e2 = color2[6]
-    color_e3 = color2[7]
+    color_e = color2[2]
+    color_e2 = color2[3]
+    color_e3 = color2[4]
     lnwidth = 2
-    axes[2,0].set_xlabel('$t$ [years]',fontsize = labelsize)
-    axes[2,0].plot(time, sim.energy, linestyle = '-', linewidth = lnwidth,color = color_e, alpha=1, label = 'Error with WH')
-    axes[2,0].set_ylabel('$dE/E_0$',fontsize = labelsize)
-    axes[2, 0].ticklabel_format(useOffset=False)
-    axes[2, 0].legend(loc = 'lower left', fontsize = 18, framealpha = 0.9)
 
-    axes[2,1].plot(time, sim2.energy, linestyle = '-',  linewidth = lnwidth,color = color_e2,alpha=1, label= 'Error with WH-HNN')
-    axes[2,1].plot(time, sim.energy, linestyle = '-',  linewidth = lnwidth, color = color_e,alpha=1, label= 'Error with WH')
-    axes[2,1].legend(loc = 'lower left', fontsize = 18, framealpha = 0.9)
-    axes[2,1].set_ylabel('$dE/E_0$',fontsize = labelsize)
-    axes[2,1].ticklabel_format(useOffset=False)
-    axes[2,1].set_xlabel('$t$ [years]',fontsize = labelsize)
+    axes[2,1].plot(time, np.array(sim2.energy)*1e3,  linestyle = '-',  linewidth = lnwidth,color = color_e2,alpha=1, label= 'Error with WH-HNN')
+    axes[2,2].plot(time, np.array(sim3.energy) *1e3, alpha=1, linestyle = '-',linewidth = lnwidth, color = color_e3,label= 'Error with WH-DNN')
+    # ax.get_xaxis().set_major_formatter('{x:1.2f}')
 
-    axes[2,2].plot(time, sim3.energy, alpha=1, linestyle = '-',linewidth = lnwidth, color = color_e3,label= 'Error with WH-DNN')
-    axes[2,2].plot(time, sim.energy, alpha=1, linestyle = '-', linewidth = lnwidth,color = color_e, label= 'Error with WH')
-    # if typePlot == 'JS':
-    axes[2,2].legend(loc = 'upper left', fontsize = 18, framealpha = 0.9)
-    # else:
-    #     axes[2,2].legend(loc = 'lower right', fontsize = 18, framealpha = 0.9)
-    axes[2,2].set_ylabel('$dE/E_0$',fontsize = labelsize)
-    axes[2,2].ticklabel_format(useOffset=False)
-    axes[2,2].set_xlabel('$t$ [years]',fontsize = labelsize)
+    axes[0,0].set_title("Numerical integrator result", fontsize = titlesize)
+    axes[0,1].set_title("Hamiltonian Neural Network result", fontsize = titlesize)
+    axes[0,2].set_title("Deep Neural Network result", fontsize = titlesize)
+    
+    axes[0,0].set_ylabel('$y$ (au)',fontsize = labelsize)
+    axes[1,0].set_ylabel('$e$',fontsize = labelsize)  
+    axes[2,0].set_ylabel(r'$dE/E_0 \;\times 10^3$',fontsize = labelsize)
+
+    for col in range(3):
+        axes[0,col].axis('equal')
+        axes[0,col].set_xlabel('$x$ (au)',fontsize = labelsize)
+    
+        axes[1,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
+        axes[1,col].get_yaxis().set_major_formatter('{x:1.3f}')
+
+        axes[2,col].plot(time, np.array(sim.energy) *1e3 , linestyle = '-', linewidth = lnwidth,color = color_e, alpha=1, label = 'Error with WH')
+        axes[2,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
+        axes[2,col].ticklabel_format(useOffset=False)
+        
+    axes[0,0].legend(loc = 'lower left', fontsize = 27, \
+                framealpha = 0.9, bbox_to_anchor=(0.0, 1.24, 2.0, 1.5),\
+                ncol=6, mode="expand", borderaxespad=0.)
+    axes[2,0].legend(loc = 'lower left', fontsize = 23, framealpha = 0.9)
+    axes[2,1].legend(loc = 'lower left', fontsize = 23, framealpha = 0.9)
+    axes[2,2].legend(loc = 'upper left', fontsize = 23, framealpha = 0.8)
 
     for i in range(3):
         for j in range(3):
-            axes[i,j].tick_params(axis='both', which='major', labelsize=17)
+            axes[i,j].tick_params(axis='both', which='major', labelsize=25)
+            axes[i,j].tick_params(axis='both', which='minor', labelsize=25)
+            axes[i, j].locator_params(axis = 'x', nbins=6)
+            axes[i, j].locator_params(axis = 'y', nbins=6)
 
     plt.tight_layout()
     plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.pdf' % t_end)
@@ -332,8 +389,8 @@ def plot_asteroids_NeurIPS():
     axes[0].plot(asteroids, t_num[:,1], color = color1[1],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
     axes[0].plot(asteroids, t_num[:,2], color = color1[2],  linestyle='-', linewidth = 2, marker = '^', markersize = 12,label = 'WH-HNN')
     
-    axes[0].set_xlabel('Number of asteroids', fontsize = 28)
-    axes[0].set_ylabel('Computation time (s)', fontsize = 28)
+    axes[0].set_xlabel('Number of asteroids', fontsize = 27)
+    axes[0].set_ylabel('Computation time (s)', fontsize = 27)
     axes[0].set_xscale('log')
     axes[0].set_yscale('log')
     axes[0].grid(alpha = 0.5)
@@ -345,18 +402,20 @@ def plot_asteroids_NeurIPS():
     # ax2 = plt.axes([.65, .6, .2, .2])
     # ax2.plot(asteroids[-2:], t_num[-2:, 0])
     # plt.setp(ax2, xticks=[], yticks=[])
-    axins = axes[0].inset_axes([0.65, 0.05, 0.3, 0.35])
+    axins = axes[0].inset_axes([0.72, 0.12, 0.25, 0.4])
     # sub region of the original image
     axins.plot(asteroids[-3:], t_num[-3:,0], color = color1[0],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
     axins.plot(asteroids[-3:], t_num[-3:,1], color = color1[1],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
     axins.plot(asteroids[-3:], t_num[-3:,2], color = color1[2],  linestyle='-', linewidth = 2, marker = '^', markersize = 12,label = 'WH-HNN')
 
-    x1, x2, y1, y2 = (asteroids[-3]+asteroids[-4])/2, asteroids[-1]*1.1, 100, 7000
+    x1, x2, y1, y2 = (asteroids[-3]+asteroids[-2])/2, asteroids[-1]*1.1, 400, 7000
     axins.set_xlim(x1, x2)
     axins.set_ylim(y1, y2)
+    axins.tick_params(axis='both', which='major', labelsize=18)
+    axins.tick_params(axis='both', which='minor', labelsize=18)
     axins.set_yscale('linear')
-    axins.set_xticklabels(axes[0].get_xticks())
-    axins.set_yticklabels([])
+    # axins.set_xticklabels(axes[0].get_xticks()[-4:])
+    # axins.set_yticklabels(axes[0].get_yticks()[-4:])
 
     axes[0].indicate_inset_zoom(axins, edgecolor="black")
 
@@ -371,12 +430,12 @@ def plot_asteroids_NeurIPS():
     e_rel2 = abs( ( np.sum(e_energy[:,1,-10:], axis = 1)/10 - e_energy[:,1,0])  / e_energy[:,1,0] ) *1e5
     e_rel3 = abs( ( np.sum(e_energy[:,2,-10:], axis = 1)/10 - e_energy[:,2,0])  / e_energy[:,2,0] ) *1e5
 
-    axes[1].plot(asteroids, t_num[:,1] -t_num[:,0], color = color1[0], linestyle = '--')
-    axes[1].plot(asteroids, t_num[:,2] -t_num[:,0], color = color1[0], linestyle = '-')
+    axes[1].plot(asteroids, t_num[:,1] -t_num[:,0], color = color1[0], linewidth = 2, linestyle = '--')
+    axes[1].plot(asteroids, t_num[:,2] -t_num[:,0], color = color1[0], linewidth = 2, linestyle = '-')
     axes[1].plot([], [], color = 'black', linestyle = '--', label = 'HNN')
     axes[1].plot([], [], color = 'black', linestyle = '-', label = 'WH-HNN ')
-    axes[1].set_xlabel('Number of asteroids', fontsize = 28)
-    axes[1].set_ylabel(r'$t - t_{WH}$ (s)', fontsize = 28, color = color1[0])
+    axes[1].set_xlabel('Number of asteroids', fontsize = 27)
+    axes[1].set_ylabel(r'$t - t_{WH}$ (s)', fontsize = 27, color = color1[0])
     axes[1].set_xscale('log')
     axes[1].set_yscale('symlog', linthresh = 1)
     axes[1].tick_params(axis='both', which='major', labelsize=25)
@@ -384,9 +443,9 @@ def plot_asteroids_NeurIPS():
     axes[1].tick_params(axis='y', labelcolor = color1[0])
 
     ax2 = axes[1].twinx()
-    ax2.plot(asteroids, e_rel2-e_rel, linestyle = '--',color = color1[2])
-    ax2.plot(asteroids, e_rel3-e_rel, linestyle = '-',color = color1[2])
-    ax2.set_ylabel(r'$\varepsilon - \varepsilon_{WH} \; _{(\times1e5)}$ ', fontsize = 28, color = color1[2])
+    ax2.plot(asteroids, e_rel2-e_rel, linestyle = '--', linewidth = 2, color = color1[2])
+    ax2.plot(asteroids, e_rel3-e_rel, linestyle = '-', linewidth = 2, color = color1[2])
+    ax2.set_ylabel(r'$\varepsilon - \varepsilon_{WH} \; _{(\times1e5)}$ ', fontsize = 27, color = color1[2])
     ax2.tick_params(axis='y', which='major', labelsize=25)
     ax2.tick_params(axis='y', which='minor', labelsize=25)
     ax2.tick_params(axis='y', labelcolor = color1[2])
