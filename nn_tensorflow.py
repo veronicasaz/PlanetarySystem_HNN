@@ -69,7 +69,7 @@ def plot_tanh_log():
     
     plt.tight_layout()
     # plt.grid(alpha = 0.5)
-    plt.savefig("./ANN_tf/tanh_log.png", dpi = 100)
+    plt.savefig("./ANN_tf/tanh_log.png", dpi = 200)
     plt.show()
 
 # plot_tanh_log()

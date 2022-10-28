@@ -799,7 +799,7 @@ def plot_accel_flagvsR(accel_i, accelerations_baseline,\
         axes[plot].scatter(x2_DNN, np.delete(accel[plot], index_DNN), color = color1[2], label = 'Flags')
         # axes[plot].set_title(names[plot-1], fontsize = 24)
     
-        axes[plot].set_title( 'R = %0.1f'%R[plot], fontsize = 24)
+        axes[plot].set_title( r'$R$ = %0.1f'%R[plot], fontsize = 24)
         axes[plot].set_xlabel('$t$ (yr)', fontsize = 25)
         axes[plot].annotate("Flags: %i / %i"%(np.count_nonzero(flags[:, 3]), len(accelerations_ANN_flag)), \
             xy =  (x[len(x)//2]-5, max((accel[plot]))*0.92), fontsize = 20)
@@ -817,8 +817,8 @@ def plot_accel_flagvsR(accel_i, accelerations_baseline,\
                 framealpha = 0.9, bbox_to_anchor=(0.0, 1.2, 1.0, 1.0),\
                 ncol=4, mode="expand", borderaxespad=0., handletextpad=0.3)
 
-    axes[3].plot(R_i, t_i, marker = 'o', color = color1[0])
-    axes[3].set_xlabel('R', fontsize = 25)
+    axes[3].plot(R_i, t_i, marker = 'o', markersize = 10, color = color1[0])
+    axes[3].set_xlabel(r'$R$', fontsize = 25)
     axes[3].set_ylabel('Comput. time (s)', fontsize = 25)
     axes[3].grid(alpha = 0.5)        
     ticks = -np.log10(axes[3].get_yticks())
@@ -1224,10 +1224,10 @@ def plot_energyvsH(sim, sim2):
         # E_2[i] = sim2.energy[i] - calculate_centralH(data, sim2.particles.masses)
         E_2[i] = calculate_interH(data, sim2.particles.masses)
 
-    lw = 3
+    lw = 4
     fig, axes = plt.subplots(1,1, figsize=(8,6))
-    axes.plot(time, E_1,  linewidth = lw, color = color1[0], label = 'WH Energy')
-    axes.plot(time, E_2, ':',  linewidth = lw, color = color1[2], label = 'WH-HNN Energy')
+    axes.plot(time, E_1,  '-',linewidth = lw, color = color1[0], label = 'WH Energy')
+    axes.plot(time, E_2, '--',  linewidth = lw, color = color1[2], label = 'WH-HNN Energy')
     axes.plot(time, np.array(sim2.H), linewidth = lw, color = color1[1], label = 'WH-HNN H')
     # plt.title('Comparison of interactive Hamiltonian \n and the predicted output of the HNN', fontsize = 13)
     plt.xlabel('Time ($yr$)', fontsize =30)
@@ -1312,7 +1312,7 @@ if __name__ == "__main__":
     multiple = 'JS'
     # multiple = 'Asteroid_JS'
     
-    run = 1
+    run = 3
     if run == 1:
         if multiple == 'JS':
             t_end = 50

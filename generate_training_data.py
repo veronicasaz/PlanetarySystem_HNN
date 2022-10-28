@@ -7,6 +7,7 @@ Description: creation of a training and test dataset. Inputs taken from config_d
 import sys
 import os
 import numpy as np
+import time
 
 import h5py
 import json
@@ -23,7 +24,6 @@ if __name__ == '__main__':
         config_data = json.load(jsonFile)
         jsonFile.close()
 
-    
     h = config_data['time_step'] # time step parameter 
     x_limits = np.array(list(config_data['ranges'].values()))
 
@@ -33,6 +33,7 @@ if __name__ == '__main__':
 
     # Run N_exp integrations with a timestep h
     data = {}
+    time_sim0 = time.time()
     for run in range(2): # 2 runs: Train and test dataset
         if run == 0: # 
             N_exp = config_data['N_exp']
@@ -98,7 +99,9 @@ if __name__ == '__main__':
                 for dset in data.keys():
                     h5f.create_dataset(dset, data=data[dset], compression="gzip")
 
-            print(time.time()- time_0, N_exp)
+                print(time.time()- time_0)
+            print("Time: ", time_sim0 - time.time())
+
     # Save to file
     path_dataset = config_data['data_dir']
     with h5py.File(os.path.join(path_dataset, 'train_test.h5'), 'w') as h5f:

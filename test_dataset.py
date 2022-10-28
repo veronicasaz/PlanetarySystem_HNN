@@ -140,7 +140,7 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
     """
     subplot2 = 3
     subplot1 = np.shape(y_pred)[1]//subplot2
-    fig = plt.figure(figsize = (23,18))
+    fig = plt.figure(figsize = (23,19))
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
     plt.subplots_adjust(wspace = 0.5, hspace=2.2)
 
@@ -166,7 +166,6 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
 
             ax[sbu2].set_xlim(left = min(y_real[:, var]), right = max(y_real[:, var]))
             ax[sbu2].set_ylim(bottom = min(y_real[:, var]), top = max(y_real[:, var]))
-            
             
             # Normalize
             if sbu == 0:
