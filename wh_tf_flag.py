@@ -1,5 +1,5 @@
 """
-Last modified: July 2022 
+Last modified: October 2022 
 Author: Maxwell X. Cai, Veronica Saz Ulibarrena 
 Description: integrator for the planets and asteroids. 
 """
@@ -78,9 +78,6 @@ class WisdomHolman(Integrator):
         # Generate flattened state vector:
         x0 = np.concatenate((self._particles.positions, self._particles.velocities))
 
-        # Time step (d):
-        # dt = WisdomHolman.initial_step_size(x0, self._particles.masses, self.particles.N, 1, factor)
-
         # Move to a heliocentric frame
         helio = WisdomHolman.move_to_helio(x0, self.particles.N)
         self.particles.positions = helio[0:3*self.particles.N]
@@ -89,16 +86,12 @@ class WisdomHolman(Integrator):
         # Initialize: compute Jacobi coordinates and initial acceleration:
         jacobi = WisdomHolman.helio2jacobi(helio, self.particles.masses, self.particles.N)
         accel = WisdomHolman.compute_accel(helio, jacobi, self.particles.masses, self.particles.N, self.CONST_G)
-        # Compute energy:
-        # energy_init = self.calculate_energy()
-        # energy_init = WisdomHolman.compute_energy(helio, self.particles.masses, self.particles.N, self.CONST_G)
         t_current = self.t
 
         # Keep track of accelerations
         accelerations_list = list()
         accelerations_list.append(accel)
         flags_list = np.zeros(self.particles.N)
-        
 
         self.H = list()
         self.T_total = 0
@@ -119,12 +112,7 @@ class WisdomHolman(Integrator):
             rel_energy_error = np.abs((__energy-self.__energy_init) / self.__energy_init)
             self.energy.append(rel_energy_error)
             self.logger.info('t = %f, dE/E0 = %g, N = %d' % (t_current, rel_energy_error, self.particles.N))
-            # if self.training_mode:
-                # save training data 
-            # self.coord.append(helio)
-            # self.dcoord.append(np.append(helio[3*self.particles.N:], accel))
             self.store_state()
-
 
         if self.accel_file_path != None:
             np.savetxt(self.accel_file_path, accelerations_list)
@@ -135,9 +123,6 @@ class WisdomHolman(Integrator):
         return 0
 
     def store_state(self):
-        # if self.buf is None:
-            # self.initialize()
-        # self.buf.initialize_buffer(self.particles.N)
         elem = self.particles.calculate_aei()
         self.buf.store_state(
             self.t,
@@ -300,7 +285,6 @@ class WisdomHolman(Integrator):
         # Convert from heliocentric to Jacobi for drifting:
         jacobi = WisdomHolman.helio2jacobi(helio, masses, nbodies)
 
-
         # Drift
         jacobi = WisdomHolman.wh_drift(jacobi, dt, masses, nbodies, G)
 
@@ -334,18 +318,13 @@ class WisdomHolman(Integrator):
                 output_nn = self.hnn[1].predict(input_nn, std = self.hnn[1].std)
                 accel[9:] = np.array(output_nn[:, 6:]).flatten()
                 
-                # print("T_net", time.time()-t_0)
-                # t_02 = time.time()
                 # Previous step as requirement
                 if self.flag == True:
-                    # print("Flag =", self.flag)
                     accel_2d = accel.reshape((nbodies, 3))
                     accel_2d_prev = accel_prev.reshape((nbodies, 3))
                     dif_accel = np.linalg.norm( (accel_prev-accel).reshape((nbodies, 3)), axis = 1).flatten()
                     accel_norm = np.linalg.norm(accel_2d, axis = 1).flatten()
                     accel_norm_prev = np.linalg.norm(accel_2d_prev, axis = 1).flatten()
-                    # idx_bad = np.where(dif_accel/abs(1e-11 + accel_norm_prev + accel_norm) >  0.3)[0]
-                    # idx_bad = np.where(np.log10(dif_accel) >  np.log10(self.R*accel_norm_prev))[0]
                     idx_bad = np.where(dif_accel/(accel_norm_prev+1e-11) >  self.R)[0]
                     flag_list[idx_bad] = np.ones(len(idx_bad)) # save which ones are bad
                     helio_pos = helio[0:3*nbodies].reshape((nbodies, 3))
@@ -359,8 +338,8 @@ class WisdomHolman(Integrator):
                         idx_coords = np.concatenate((idx_pos, idx_vel))
                         accel[0:9] = WisdomHolman.compute_accel(helio[idx_coords], jacobi[idx_coords], masses[0:3], 3, G) # correct Jup and Sat
                     idx_bad = np.delete(idx_bad, idx_bad<3)
+                    
                     # Do at once all the wrong ones
-
                     idx_pos = np.arange(0, 3*3, 1)
                     idx_vel = np.arange(nbodies*3, nbodies*3+3*3, 1)
                     idx_masses = np.arange(0, 3, 1)
@@ -371,8 +350,6 @@ class WisdomHolman(Integrator):
                     if len(idx_bad) > 0:
                         idx_coords = np.concatenate((idx_pos, idx_vel))
                         accel[idx_pos[9:]] = WisdomHolman.compute_accel(helio[idx_coords], jacobi[idx_coords], masses[idx_masses], 3+len(idx_bad), G)[9:] # asteroid
-                    # print("Time flag", time.time()-t_0)
-                # print("t2 ", time.time()-t_0)
 
             elif self.multiple_nets == 'Asteroid_JS_energy':
                 input_JS = jacobi_input[0:2,:].flatten()
@@ -384,7 +361,6 @@ class WisdomHolman(Integrator):
                 output_nn = self.hnn[1].predict(input_nn, std = False)
                 accel[9:] = np.array(output_nn[:, 6:]).flatten()
 
-                
                 # Previous step as requirement
                 if self.flag == True:
                     energy_0 = self.compute_energy(helio, masses, nbodies, G)
@@ -412,9 +388,6 @@ class WisdomHolman(Integrator):
                 dif_accel = np.linalg.norm( (accel_prev-accel).reshape((nbodies, 3)), axis = 1).flatten()
                 accel_norm = np.linalg.norm(accel_2d, axis = 1).flatten()
                 accel_norm_prev = np.linalg.norm(accel_2d_prev, axis = 1).flatten()
-                # idx_bad = np.where(dif_accel/abs(1e-11 + accel_norm_prev + accel_norm) >  0.3)[0]
-                # idx_bad = np.where(np.log10(dif_accel) >  np.log10(self.R*accel_norm_prev))[0]
-                # (dif_accel/(accel_norm_prev+1e-11) >  self.R
                 if self.flag == True and np.any(dif_accel/(accel_norm_prev+1e-11) >  self.R):
                     accel = WisdomHolman.compute_accel(helio, jacobi, masses, nbodies, G)
                     flag_list = np.ones(len(flag_list))
@@ -435,6 +408,7 @@ class WisdomHolman(Integrator):
                         flag_list = np.ones(nbodies)
         
             self.T_total += time.process_time()-t_0
+        
         # Kick:
         helio = WisdomHolman.wh_kick(helio, dt / 2, masses, nbodies, accel)
         self.dcoord_a.append(accel)
@@ -452,7 +426,6 @@ class WisdomHolman(Integrator):
         :return:
             - kick: state at t + dt after the kick
         """
-
         # Create shallow copy:
         kick = x.copy()
 

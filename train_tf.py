@@ -1,6 +1,6 @@
 """
 Created: July 2021 
-Last modified: July 2022 
+Last modified: October 2022 
 Author: Veronica Saz Ulibarrena 
 Description: Process of dataset, plot of dataset, training of neural network, plot results
 """
@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import h5py
 
-from nn_tensorflow import  ANN, predict_multiple #TODO: get back to this
+from nn_tensorflow import  ANN, predict_multiple 
 from data import get_dataset, get_traintest_data, load_json
 from plots_database import plot_pairplot, plot_distribution, plot_correlation,\
              plot_distance, plot_distance3D, plot_covariance_samples, plot_covariance,\
@@ -19,10 +19,6 @@ from plots_database import plot_pairplot, plot_distribution, plot_correlation,\
 from test_dataset import plot_prediction_error, plot_prediction_error_H, \
             load_dataset, plot_prediction_error_HNNvsDNN, plot_prediction_error_HNNvsDNN_JS, \
             plot_prediction_error_HNNvsDNN_JS_dif
-
-# from data_noinputmass import get_dataset, get_traintest_data, load_json
-# from nn_tensorflow_noinputmass import ANN
-
 
 def process_data(config, name):
     """
@@ -57,10 +53,8 @@ def get_data(config, name = None, plot = False):
     data2 = dict()
     data2['coords'] = data['coords'][0:config['train_samples']]
     data2['dcoords'] = data['dcoords'][0:config['train_samples']]
-    # data2['masses'] = data['masses'][0:config['train_samples']]
     data2['test_coords'] = data['test_coords'][0:config['test_samples']]
     data2['test_dcoords'] = data['test_dcoords'][0:config['test_samples']]
-    # data2['test_masses'] = data['test_masses'][0:config['test_samples']]
     
     print("Training samples:", np.shape(data2['coords']))
 
@@ -194,7 +188,6 @@ def predict_HNNvsDNN(path_pic, settings, settings_file_path, data, name):
         x2, y_pred2, y_real2 = load_dataset(settings, settings_file_path, data, path_model = path_pic + "Model_JS_DNN/", drdv = True)
 
         # plot together    
-        # plot_prediction_error_HNNvsDNN_JS(path_pic, x, y_pred, y_real, x2, y_pred2, y_real2)
         plot_prediction_error_HNNvsDNN_JS_dif(path_pic, x, y_pred, y_real, x2, y_pred2, y_real2)
 
 if __name__ == "__main__":
@@ -220,14 +213,13 @@ if __name__ == "__main__":
     else:
         settings['bodies'] = 3 # Case with asteroid
         
-    # train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/'+'47_45butDNN1e7/')
-    # train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/')
+    train_DNN(settings, data, path_model ="./ANN_tf/"+ name +'/')
     # train_multiple(settings, data, 6)
     # autokeras(settings, data) # Check best parameters
     
     ####### PREDICT ########
     path_pic = "./ANN_tf/" + name +'/'
-    # predict(path_pic, settings, settings_file_path, data)
+    predict(path_pic, settings, settings_file_path, data)
 
     # Before doing this, move the trained models to the corresponding folders
     predict_HNNvsDNN(path_pic, settings, settings_file_path, data, name)

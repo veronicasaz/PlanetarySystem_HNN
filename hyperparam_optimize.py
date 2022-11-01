@@ -1,6 +1,6 @@
 """
 Created: July 2021 
-Last modified: August 2022 
+Last modified: October 2022 
 Author: Veronica Saz Ulibarrena 
 Description: Hyperparameter optimization, loss function weight optimization
 """
@@ -38,9 +38,7 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 tf.random.set_seed(1234)
 tf.keras.backend.set_floatx('float64')
 
-
-color1 = ['navy', 'dodgerblue','darkorange']
-color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
+from plot_tools import color1, color2
 
 # Activation function
 def loss_weight_mse(x, y, y_pred, w):
@@ -74,8 +72,6 @@ class ANN(tf.keras.Model):
 
         super(ANN, self).__init__()
                 
-        # self.strategy = tf.distribute.MirroredStrategy() #parallelize code
-
         # Settings
         self.settings = settings
         self.params_net = params_net
@@ -97,7 +93,6 @@ class ANN(tf.keras.Model):
         else: 
             self.seed = 5
 
-        # with self.strategy.scope(): #TODO: parallel
         if restart == False:
             self.model = self.create_model()
         else:
@@ -117,19 +112,6 @@ class ANN(tf.keras.Model):
         # Loss function
         self.w = w
         self.loss = loss_weight_mse
-        # if self.settings['loss'] == 'mse':
-        #     self.loss = loss_mse
-        # elif self.settings['loss'] == 'mse_log':
-        #     self.loss = loss_mse_log
-        # elif self.settings['loss'] == 'log':
-        #     self.loss = tf.keras.losses.MeanSquaredLogarithmicError()
-        # elif self.settings['loss'] == 'loss_mse_log':
-        #     self.loss = loss_mse_log
-        # elif self.settings['loss'] == 'loss_weight_mse':
-        #     self.loss = loss_weight_mse
-        # elif self.settings['loss'] == 'loss_multiply':
-        #     self.loss = loss_multiply
-        
 
     def create_model(self):
         param_layer = int(self.params_net[1])
@@ -184,9 +166,7 @@ class ANN(tf.keras.Model):
         I_np = np.eye(n_inputs)
 
         mass_idx = np.arange(0, n_inputs, 4) # If mass of Jup and Saturn included
-        # mass_idx = [0] # If only mass of asteroid included
         I_np = np.delete(I_np, mass_idx, 0)
-        # I_np_ast = I_np[-3:, :]
 
         I_m_np = np.zeros((n_inputs//4*3, n_inputs))
         for i in range(n_inputs//4):
@@ -207,7 +187,6 @@ class ANN(tf.keras.Model):
         y = tf.divide(y, M)
 
         return y
-
 
     @tf.function
     def train_step(self, x, y):
@@ -274,16 +253,12 @@ class ANN(tf.keras.Model):
         prev_time = time_0
         for ep in range(1, self.settings['max_epochs']+1):
             
-            #TODO: inside or outside this for loop? before it was outside
             train_data = tf.data.Dataset.from_tensor_slices((features_train, labels_train)).shuffle(buffer_size=np.shape(features_train)[0]).batch(self.settings['batch_size'])
             val_data = tf.data.Dataset.from_tensor_slices((features_val, labels_val)).shuffle(buffer_size=np.shape(features_val)[0]).batch(np.shape(features_val)[0])
 
             loss_b = 0
             for batch, (X, y) in enumerate(train_data):
                 loss_b += self.train_step(X, y)
-                # self.model.save_weights(self.path_model + 'weights/my_checkpoint_%i_%i'%(ep, batch))
-                # print(
-                #     "\rEpoch: [%d/%d] Batch: %d%s" % (ep, self.settings['max_epochs'], batch, '.'*(batch%10)), end='')
             self.history['loss'][ep-1] = loss_b / (batch+1)# average of losses of batches
                 
             # Validation round
@@ -291,7 +266,6 @@ class ANN(tf.keras.Model):
             for batch, (X, y) in enumerate(val_data):
                 loss_val += self.test_step(X, y)
 
-                # val_loss.append(self.test_step(X,y))
             self.history['val_loss'][ep-1] = self.test_step(X, y)
 
             time_i = time.time()
@@ -306,15 +280,8 @@ class ANN(tf.keras.Model):
             prev_time = time_i
 
             if ep % 20 == 0:
-                # self.model.save(self.path_model + "model_tanh.h5") # Save model every 100 iterations in case I need to stop early
                 self.model.save(self.path_model + "model.h5") # Save model every 100 iterations in case I need to stop early
                 self.saveTraining()
-                # if abs(np.mean(self.history['loss'][ep-20:ep-5]) - np.mean(self.history['loss'][ep-5:ep-1]) )/ np.mean(self.history['loss'][ep-5:ep-1]) <0.1 :
-                #     print((np.mean(self.history['loss'][ep-20:ep-5]) - np.mean(self.history['loss'][ep-5:ep-1]) )/ np.mean(self.history['loss'][ep-5:ep-1]) )
-                #     print(np.mean(self.history['loss'][ep-20:ep-1]))
-                #     print(np.mean(self.history['loss'][ep-5:ep-1]))
-                    # break #No improvement for long time
-            
 
             if ep > 100 and ep % 20 == 0 :
                 if np.mean(self.history['val_loss'][ep-20:ep]) >= 1.2*np.mean(self.history['val_loss'][ep-40:ep-20]): # overfitting
@@ -324,36 +291,12 @@ class ANN(tf.keras.Model):
                     print("No improvement")
                     break
                 
-        # self.model.save(self.path_model + "model_tanh.h5")
         self.model.save(self.path_model + "model.h5")
 
-
-    def train_autokeras(self, data):
-        features = data['coords']
-        labels = data['dcoords']
-        train_set = tf.data.Dataset.from_tensor_slices((data['coords'], data['dcoords']))
-        test_set = tf.data.Dataset.from_tensor_slices((data['test_coords'], data['test_dcoords']))
-
-        reg = ak.StructuredDataRegressor(max_trials=3, overwrite=True)
-        # Feed the tensorflow Dataset to the regressor.
-        reg.fit(train_set, epochs=10)
-        # Predict with the best model.
-        predicted_y = reg.predict(test_set)
-        # Evaluate the best model with testing data.
-        print(reg.evaluate(test_set))
-
-        self.model = reg.export_model()
-        self.model.save(self.path_model + "model_autokeras", save_format="tf")
-        self.model.summary()
-        
-    def load_model_ak(self, path_model):
-        self.model = tf.keras.models.load_model(path_model+"model_autokeras", custom_objects=ak.CUSTOM_OBJECTS)
-        self.model.summary()
 
     def saveTraining(self, path= None):
         if path == None:
             path = self.path_model
-        # path = path +"training_tanh.txt"
         path = path +"training.txt"
         trainloss = self.history['loss']
         valloss = self.history['val_loss']
@@ -397,7 +340,6 @@ class ANN(tf.keras.Model):
             path = self.path_model
         print(path +'model.h5')
         model = ke.models.load_model(path +'model.h5', custom_objects={'tanh_log': tf.keras.layers.Activation(tanh_log), 'sin': tf.keras.layers.Activation(sin)})
-            # model = ke.models.load_model(path +'model.h5',custom_objects={"CustomModel": CustomModel} )
 
         self.model = model
         return model
@@ -421,8 +363,6 @@ class ANN(tf.keras.Model):
         else:
             y_pred = H
         del g
-        # if divide_by_mass == True:
-        #     y_pred = divide_by_mass_f(inp, y_pred.numpy())
 
         return y_pred
 
@@ -461,9 +401,10 @@ def optimize(data, config, params, N):
         ANN_tf.saveTraining()
         ANN_tf.plotTraining("./ANN_tf/asteroid/optim/net_"+str(net+1)+"_", \
                             path_training_process = "./ANN_tf/asteroid/optim/net_"+str(net+1)+'_')
-        # x, y_pred, y_real = load_dataset(config, "./config_ANN.json", data, \
-        #                     path_model = "./ANN_tf/asteroid/optim/net_"+str(net+1)+"_")
-        # plot_prediction_error("./ANN_tf/asteroid/optim/net_"+str(net+1)+'_', x, y_pred, y_real)
+
+        x, y_pred, y_real = load_dataset(config, "./config_ANN.json", data, \
+                            path_model = "./ANN_tf/asteroid/optim/net_"+str(net+1)+"_")
+        plot_prediction_error("./ANN_tf/asteroid/optim/net_"+str(net+1)+'_', x, y_pred, y_real)
 
 def optimize_w(data, config, w, N):
     """
@@ -483,7 +424,7 @@ def optimize_w(data, config, w, N):
         for r in range(N):
             combi[r, j] = w[j][idx[r]]
 
-    # np.savetxt("./ANN_tf/trained_nets/optim_w/weights.txt", combi)
+    np.savetxt("./ANN_tf/trained_nets/optim_w/weights.txt", combi)
     params_net = [50000, 2, 100, 0.6, 0.001, 50000, 0.9]
     mse_test = np.zeros(N)
     for net in range(N):
@@ -497,13 +438,13 @@ def optimize_w(data, config, w, N):
         print("=============================================================")
         ANN_tf = ANN(config, params_net, w, path_model = "./ANN_tf/asteroid/optim_w/net_"+str(net+1)+"_")
 
-        # ANN_tf.train(data)
-        # ANN_tf.saveTraining()
-        # ANN_tf.plotTraining("./ANN_tf/trained_nets/optim_w/net_"+str(net+1)+"_", \
-        #                     path_training_process = "./ANN_tf/trained_nets/optim_w/net_"+str(net+1)+'_')
+        ANN_tf.train(data)
+        ANN_tf.saveTraining()
+        ANN_tf.plotTraining("./ANN_tf/trained_nets/optim_w/net_"+str(net+1)+"_", \
+                            path_training_process = "./ANN_tf/trained_nets/optim_w/net_"+str(net+1)+'_')
         x, y_pred, y_real = load_dataset(config, "./config_ANN.json", data, \
                             path_model = "./ANN_tf/asteroid/optim_w/net_"+str(net+1)+"_")
-        # plot_prediction_error("./ANN_tf/trained_nets/optim_w/net_"+str(net+1)+'_', x, y_pred, y_real)
+        plot_prediction_error("./ANN_tf/trained_nets/optim_w/net_"+str(net+1)+'_', x, y_pred, y_real)
         mse_test[net] = skl.mean_squared_error(y_real/y_real, y_pred/y_real)
     return mse_test
 
@@ -515,36 +456,14 @@ def plot_optim(data, N):
         N: number of experiments to carry out
     """
     params = np.loadtxt("./ANN_tf/asteroid/optim/params.txt")
-
-    # TODO: eliminate, load manually
-    # N_folder = [1, 9, 10, 33]
-    # N_folder = [5]
-    # net_counter = 0
-    # for folder in range(len(N_folder)):
-    #     for net in range(N_folder[folder]):
-    #         data_t = np.loadtxt("./ANN_tf/asteroid/optim/"+str(folder+1)+"/net_"+str(net+1)+"_" +"training.txt")
-    #         loss[net_counter, 0] = data_t[0, -1]
-    #         loss[net_counter, 1] = data_t[1, -1]
-    #         net_counter +=1
- 
-    # N = 5
     loss = np.zeros((N, 2))
 
     for net in range(N):
         data_t = np.loadtxt("./ANN_tf/asteroid/optim/net_"+str(net+1)+"_" +"training.txt")
-        # train_loss = data_t[0, -1]
-        # val_loss = data_t[1, -1]
-        # train_loss = data_t[0, :] 
-        # train_loss = train_loss[train_loss != 0]
-        # val_loss = data_t[0, :] 
-        # val_loss = val_loss[val_loss != 0]
-        # loss[net, 0] = train_loss[-1]
-        # loss[net, 1] = val_loss[-1]
         loss[net, 0] = data_t[0, -1]
         loss[net, 1] = data_t[1, -1]
 
     D_samples = np.hstack((loss, params[0:N,:]))
-
     
     subplot2 = 1
     subplot1 = 1
@@ -564,8 +483,6 @@ def plot_optim(data, N):
 
     # plt.title('Results of hyperparameter optimization', fontsize = 22)
     legend = plt.legend(fontsize = 26, bbox_to_anchor=(1.0, 1.0))
-    # legend = plt.legend(fontsize = 12, title = 'Number of training samples, layers, neurons per layer, ratio of neurons, initial learning rate, \nlearning rate decay, learning rate steps')
-    # legend.get_title().set_fontsize('15')
     plt.grid(alpha = 0.5)
     # plt.axis('equal')
 
@@ -590,32 +507,18 @@ def plot_optim_w(data, N):
     loss = np.zeros((N, 2))
     for net in range(N):
         data_t = np.loadtxt("./ANN_tf/asteroid/optim_w/net_"+str(net+1)+"_" +"training.txt")
-        # train_loss = data_t[0, -1]
-        # val_loss = data_t[1, -1]
         loss[net, 0] = data_t[0, -1]
         loss[net, 1] = data_t[1, -1]
 
-    # netsize = 12*params[:, 2] + params[:, 2]*params[:, 1]
     D_samples = np.hstack((loss, w))
-    # D_samples = D[D[:, 2].argsort()]
-    # D_layers = D[D[:, 3].argsort()]
-    # D_neurons = D[D[:, 4].argsort()]
-
     
     subplot2 = 1
     subplot1 = 1
     fig, ax = plt.subplots(subplot1, subplot2, figsize=(15,15))
     
-    # cm = plt.cm.get_cmap('jet')
-    # sc = ax.scatter(params[:, 1], params[:, 2], s = 60, marker = 'o', c = loss[:, 0], norm=plc.LogNorm(), cmap =  cm)
-    # ax.scatter(params[:, 1], params[:, 2], s = 30, marker = 'x', c = loss[:, 1], norm=plc.LogNorm(), cmap =  cm)
-    # pcm = plt.colorbar(sc)
-
     plt.subplot(subplot1, subplot2, 1)
     index = np.where(D_samples[:, 0] == np.min(D_samples[:, 0]))[0]
     index_val = np.where(D_samples[:, 1] == np.min(D_samples[:, 1]))[0]
-    # plt.plot(D_samples[:, 2], D_samples[:, 0], marker = 'o', label = 'train loss')
-    # plt.plot(D_samples[:, 2], D_samples[:, 1], marker = 'x', label = 'val loss')
     plt.scatter(D_samples[:, 0], D_samples[:, 1], s = 100, marker = 'o' )
     plt.scatter(D_samples[index, 0], D_samples[index, 1], s = 150, color = 'red', marker = 's' , label = str(index[0]+1) +str(w[index, :]))
     plt.scatter(D_samples[index_val, 0], D_samples[index_val, 1], s = 150, color = 'blue', marker = 's' , label = str(index_val[0]+1) +str(w[index_val, :]))
@@ -625,7 +528,6 @@ def plot_optim_w(data, N):
 
     plt.legend()
     plt.grid(alpha = 0.5)
-    # plt.axis('equal')
 
     plt.xlabel("Train loss")
     plt.ylabel("Validation loss")
@@ -675,23 +577,13 @@ if __name__ == "__main__":
     settings['max_epochs'] = 2000
     data = get_data(settings, plot = False, name = 'asteroid/')
 
-    # samples = [100000, 150000, 200000, 250000, 300000]
-    # samples = [4000]
-    # samples = [10, 20, 50, 100]
     layers = [2, 3, 4, 5]
     samples = [10000, 50000, 10000, 200000, 250000]
-    # samples = [250000]
-    # samples = [50]
     neurons = [100, 200, 300, 500, 700]
-    # layers = [3]
-    # neurons = [300]
-    # ratio_neurons = [0.5, 0.6, 0.7, 1.0]
     ratio_neurons = [0.6]
     lr_0 = [1e-3]
-    # lr_steps = [1e5, 5e5, 1e6]
     lr_steps = [5e5]
     lr_decay = [0.9]
-    
 
     N = 33
 

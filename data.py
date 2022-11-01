@@ -1,6 +1,6 @@
 """
 Created: July 2021 
-Last modified: July 2022 
+Last modified: October 2022 
 Author: Veronica Saz Ulibarrena 
 Description: Process of dataset, load dataset, normalization
 """

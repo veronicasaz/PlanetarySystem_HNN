@@ -1,6 +1,6 @@
 """
 Created: July 2021 
-Last modified: July 2022 
+Last modified: October 2022 
 Author: Veronica Saz Ulibarrena 
 Description: Create, train ANNs and predict with them
 """
@@ -57,18 +57,15 @@ def plot_tanh_log():
 
     plt.xlabel('x', fontsize= 23)
     plt.ylabel('f(x)', fontsize= 23)
-    # plt.title("Activation functions", fontsize= 20)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xscale('symlog')
     ax.set_yscale('symlog')
     ax.tick_params(axis='both', which='major', labelsize=18)
     ax.tick_params(axis='both', which='minor', labelsize=15)
-    # plt.legend(fontsize = 18, loc= 'upper left')
     plt.legend(fontsize = 20, bbox_to_anchor=(1.0, 1.0) )
     
     plt.tight_layout()
-    # plt.grid(alpha = 0.5)
     plt.savefig("./ANN_tf/tanh_log.png", dpi = 200)
     plt.show()
 
@@ -418,7 +415,6 @@ class ANN(tf.keras.Model):
         """
         if path == None:
             path = self.path_model
-        # path = path +"training_tanh.txt"
         path = path +"training.txt"
         trainloss = self.history['loss']
         valloss = self.history['val_loss']

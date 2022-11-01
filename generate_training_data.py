@@ -1,6 +1,6 @@
 """
 Created: July 2021 
-Last modified: July 2022 
+Last modified: November 2022 
 Author: Veronica Saz Ulibarrena 
 Description: creation of a training and test dataset. Inputs taken from config_data.json. Integration done using wh_generate_database
 """
@@ -16,7 +16,6 @@ from pyDOE import lhs
 import time
 from wh_generate_database import WisdomHolman
 
-
 if __name__ == '__main__':
 
     # Load settings for the database
@@ -29,7 +28,6 @@ if __name__ == '__main__':
 
     # Save masses of different bodies
     m_JSb = np.array([1, x_limits[0,0], x_limits[0,1], 1]) # mass of Jup and saturn
-
 
     # Run N_exp integrations with a timestep h
     data = {}
@@ -99,7 +97,6 @@ if __name__ == '__main__':
                 for dset in data.keys():
                     h5f.create_dataset(dset, data=data[dset], compression="gzip")
 
-                print(time.time()- time_0)
             print("Time: ", time_sim0 - time.time())
 
     # Save to file

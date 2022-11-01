@@ -1,21 +1,26 @@
+"""
+Created: July 2021 
+Last modified: October 2022 
+Author: Veronica Saz Ulibarrena 
+Description: Plots of datase
+"""
 import sys
 import os
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as plc
 from matplotlib import rcParams
-# rc('text.latex', preamble=r'\usepackage{charter}')
 import seaborn as sns
 import pandas as pd 
 from data import get_dataset
 
-import matplotlib
+from plot_tools import trunc, color1, color2
+
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
-# matplotlib.rcParams['axes.formatter.useoffset'] = False
 
-color1 = ['navy', 'dodgerblue','darkorange']
-color2 = ['dodgerblue', 'navy', 'orangered', 'green', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
+
     
 def plot_pairplot(data, name):
     """
@@ -83,9 +88,6 @@ def plot_correlation(data, name):
     plt.show()
 
 
-def trunc(values, decs=0):
-    return np.trunc(values*10**decs)/(10**decs)
-
 def plot_distribution(coords, dcoords, namefile, name):
     """
     plot_distribution: plot bars with frequency of inputs and outputs
@@ -104,9 +106,6 @@ def plot_distribution(coords, dcoords, namefile, name):
     fig, axes = plt.subplots(figsize = (12,8),nrows=n_rows, ncols=n_cols)
     fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.1)
     if name == 'asteroid/':
-        # title = [r'Jupiter mass ($m_{Sun}$)',r'Jupiter x ($au$)', r'Jupiter y ($au$)', r'Jupiter z ($au$)',\
-        #      r'Saturn mass ($m_{Sun}$)',r'Saturn x ($au$)', r'Saturn y ($au$)', r'Saturn z ($au$)', \
-        #      r'Asteroid mass ($kg$)', r'Asteroid x ($au$)', r'Asteroid y ($au$)', r'Asteroid z ($au$)']
         title = [r'Jupiter mass ($m_{Sun}$)',r'Jupiter x ($au$)', r'Jupiter y ($au$)', r'Jupiter z ($au$)',\
              r'Saturn mass ($m_{Sun}$)',r'Saturn x ($au$)', r'Saturn y ($au$)', r'Saturn z ($au$)', \
              r'Asteroid mass ($\times 10^{8}$) ($m_{Sun}$)', r'Asteroid x ($au$)', r'Asteroid y ($au$)', r'Asteroid z ($au$)']
@@ -119,11 +118,9 @@ def plot_distribution(coords, dcoords, namefile, name):
         title_o = [r'Jupiter $a_x$ ($au\;/\;  yr^2$)', r'Jupiter $a_y$ ($au\;/\;    yr^2$)', r'Jupiter $a_z$ ($au\;/\;    yr^2$)',\
              r'Saturn $a_x$ ($au\;/\;    yr^2$)', r'Saturn $a_y$ ($au\;/\;    yr^2$)', r'Saturn $a_z$ ($au\;/\;    yr^2$)']
 
-    # coords[:, -4] *= 1e10
     for j in range(n_inputs):
         ax = axes[int(j //(n_cols)), int(j%(n_cols) )] 
         ax.hist(coords[:, j], bins = 20, histtype = 'bar', color = color1[0], edgecolor="white")
-        # ax.set_title(title[j], fontsize = 13)
         ax.set_xlabel(title[j], fontsize = 18)
         ax.set_ylabel("Frequency", fontsize = 18)
         ax.set_xticklabels(trunc(ax.get_xticks(), decs = 3),  fontsize=15)
@@ -135,7 +132,6 @@ def plot_distribution(coords, dcoords, namefile, name):
     plt.show()
 
     # PLOT OUTPUTS
-    
     fig, axes = plt.subplots(figsize = (12,8),nrows=n_rows, ncols=n_cols-1)
     fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.4)
     for j in range(n_outputs):
@@ -291,7 +287,6 @@ def plot_covariance_samples(data, name):
         data: dataset with inputs and outputs
     """
     samples = [30, 50, 100, 500, 1000, 2000, 5000] # at least more than the number of inputs
-    # samples = [30] # at least more than the number of inputs
     I = np.zeros(len(samples))
     O = np.zeros(len(samples))
 
@@ -311,7 +306,6 @@ def plot_covariance_samples(data, name):
     ax[1].plot(samples, O/I, marker = "o")
     ax[1].set_xlabel("Samples")
     ax[1].set_ylabel("det(cov( O )) / det(cov( I ))")
-    # ax[1].set_xscale('log')
     ax[1].set_yscale('log')
     
     plt.title("Covariance")
@@ -359,11 +353,11 @@ def plot_trajectory(data, name):
         data: dataset with inputs and outputs
     """
     fig, ax = plt.subplots(figsize = (8,6),nrows=1, ncols=1)
+    # fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.4)
     marker = [ 'o','.', 's', 's']
     markersize = 20
     axissize = 25
     ticksize = 23
-    # fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.4)
 
     # Choose variable and number of samples to plot
     x_1 = data['coords'][:500, 1]
@@ -387,7 +381,6 @@ def plot_trajectory(data, name):
     plt.axis('equal')
 
     plt.grid(alpha = 0.5)
-    # plt.legend(fontsize = 20, framealpha = 0.85, loc = 'upper left')
     lgnd = plt.legend(loc = 'lower left', fontsize = 23, \
                 framealpha = 0.9, bbox_to_anchor=(-0.12, 1.02, 1.2, 1.5),\
                 ncol=4, mode="expand", borderaxespad=0., handletextpad=0.)
@@ -395,8 +388,6 @@ def plot_trajectory(data, name):
     lgnd.legendHandles[1]._sizes = [100]
     lgnd.legendHandles[2]._sizes = [100]
     lgnd.legendHandles[3]._sizes = [100]
-    # plt.legend(fontsize = axissize, framealpha = 1.0, bbox_to_anchor=(1.0, 1.0))
-    
     # plt.title("Distribution of positions of Jupiter, Saturn, and the asteroids", fontsize = 15)
     plt.tight_layout()
     plt.savefig( "./dataset/"+name+"trajectory_distribution.png", dpi = 100, bbox_inches='tight')

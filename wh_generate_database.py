@@ -282,10 +282,6 @@ class WisdomHolman(Integrator):
         # Kick:
         helio = WisdomHolman.wh_kick(helio, dt / 2, masses, nbodies, accel) 
 
-        # Return the heliocentric coordinates:
-#         print('coord', helio)
-#         print('dcoord', np.append(helio[3*nbodies:], accel))
-
         return helio, accel, jacobi
 
     @staticmethod
@@ -596,71 +592,3 @@ class WisdomHolman(Integrator):
         dt = period / factor
 
         return dt
-
-if __name__ == '__main__':
-
-    m1 = np.linspace(1.e-2, 1.e-8, 1000)
-    a1 = np.linspace(0.3, 100, 1000)
-    N_exp = 50
-    h = 0.05 # time step parameter 
-
-    # V: training dataset
-    coords = None
-    dcoords = None
-    for trail, semi in enumerate(np.linspace(0.2,1,N_exp)):
-        print('Trail #%d/%d (train)' % (trail+1, N_exp))
-        wh = WisdomHolman()
-        a0 = semi
-        wh.particles.add(mass=1.0, pos=[0., 0., 0.,], vel=[0., 0., 0.,], name='Sun')
-        wh.particles.add(mass=np.random.choice(m1), a=np.random.choice(a1), e=0.05*np.random.rand(), i=np.pi/2*np.random.rand(), name='planet1', primary='Sun',f=2*np.pi*np.random.rand())
-        wh.particles.add(mass=np.random.choice(m1), a=np.random.choice(a1), e=0.05*np.random.rand(), i=np.pi/2*np.random.rand(), name='planet2', primary='Sun',f=2*np.pi*np.random.rand())
-        
-        print(wh.particles)
-        wh.h = h
-        wh.acceleration_method = 'numpy'
-        wh.integrate(500)
-        if coords is None and dcoords is None:
-            if np.isnan(wh.coord).sum() == 0 and np.isnan(wh.dcoord).sum() == 0:
-                coords = np.array(wh.coord)
-                dcoords = np.array(wh.dcoord)
-        else:
-            if np.isnan(wh.coord).sum() == 0 and np.isnan(wh.dcoord).sum() == 0:
-                coords = np.append(coords, np.array(wh.coord), axis=0)
-                dcoords = np.append(dcoords, np.array(wh.dcoord), axis=0)
-
-    # V: test dataset
-    a_init = 1
-    test_coords = None
-    test_dcoords = None
-    for trail, semi in enumerate(np.linspace(1,2,N_exp)):
-        print('Trail #%d/%d (test)' % (trail, N_exp))
-        wh = WisdomHolman()
-        wh.particles.add(mass=1.0, pos=[0., 0., 0.,], vel=[0., 0., 0.,], name='Sun')
-        wh.particles.add(mass=np.random.choice(m1), a=np.random.choice(a1), e=0.05*np.random.rand(), i=np.pi/2*np.random.rand(), name='planet1', primary='Sun',f=2*np.pi*np.random.rand())
-        wh.particles.add(mass=np.random.choice(m1), a=np.random.choice(a1), e=0.05*np.random.rand(), i=np.pi/2*np.random.rand(), name='planet2', primary='Sun',f=2*np.pi*np.random.rand())
-
-        print(wh.particles)
-        wh.h = h
-        wh.acceleration_method = 'numpy'
-        wh.integrate(200)
-        if test_coords is None and test_dcoords is None:
-            test_coords = np.array(wh.coord)
-            test_dcoords = np.array(wh.dcoord)
-        else:
-            test_coords = np.append(test_coords, np.array(wh.coord), axis=0)
-            test_dcoords = np.append(test_dcoords, np.array(wh.dcoord), axis=0)
-
-    data = {}
-    data['coords'] = coords
-    data['dcoords'] = dcoords
-    data['test_coords'] = test_coords
-    data['test_dcoords'] = test_dcoords
-
-    import h5py
-    from data.config_data import CONFIG
-    import os
-
-    with h5py.File(os.path.join(CONFIG['data_dir'], 'train_test.h5'), 'w') as h5f:
-        for dset in data.keys():
-            h5f.create_dataset(dset, data=data[dset], compression="gzip")
-    print('Training data generated.')
