@@ -521,7 +521,8 @@ def plot_asteroids():
         for dset in h5f.keys():
             data[dset] = h5f[dset][()]
 
-    t_num = data['time']
+    # t_num = data['time']
+    t_num = data['time_accel']
     e_energy = data['energy']
     h, t_end = data['settings']
     asteroids = data['asteroids']
@@ -559,6 +560,97 @@ def plot_asteroids():
     axins.set_yscale('linear')
 
     axes[0].indicate_inset_zoom(axins, edgecolor="black")
+
+    e_rel = abs( ( np.sum(e_energy[:,0,-10:], axis = 1)/10 - e_energy[:,0,0])  / e_energy[:,0,0] ) *1e5
+    e_rel2 = abs( ( np.sum(e_energy[:,1,-10:], axis = 1)/10 - e_energy[:,1,0])  / e_energy[:,1,0] ) *1e5
+    e_rel3 = abs( ( np.sum(e_energy[:,2,-10:], axis = 1)/10 - e_energy[:,2,0])  / e_energy[:,2,0] ) *1e5
+
+    axes[1].plot(asteroids, t_num[:,1] -t_num[:,0], color = color1[0], linewidth = 2, linestyle = '--')
+    axes[1].plot(asteroids, t_num[:,2] -t_num[:,0], color = color1[0], linewidth = 2, linestyle = '-')
+    axes[1].plot([], [], color = 'black', linestyle = '--', label = 'HNN')
+    axes[1].plot([], [], color = 'black', linestyle = '-', label = 'WH-HNN ')
+    axes[1].set_xlabel('Number of asteroids', fontsize = 27)
+    axes[1].set_ylabel(r'$t - t_{WH}$ (s)', fontsize = 27, color = color1[0])
+    axes[1].set_xscale('log')
+    axes[1].set_yscale('symlog', linthresh = 1)
+    axes[1].tick_params(axis='both', which='major', labelsize=25)
+    axes[1].tick_params(axis='both', which='minor', labelsize=25)
+    axes[1].tick_params(axis='y', labelcolor = color1[0])
+
+    ax2 = axes[1].twinx()
+    ax2.plot(asteroids, e_rel2-e_rel, linestyle = '--', linewidth = 2, color = color1[2])
+    ax2.plot(asteroids, e_rel3-e_rel, linestyle = '-', linewidth = 2, color = color1[2])
+    ax2.set_ylabel(r'$\varepsilon - \varepsilon_{WH} \; _{(\times1e5)}$ ', fontsize = 27, color = color1[2])
+    ax2.tick_params(axis='y', which='major', labelsize=25)
+    ax2.tick_params(axis='y', which='minor', labelsize=25)
+    ax2.tick_params(axis='y', labelcolor = color1[2])
+    axes[1].legend(fontsize = 22, loc = 'lower left', labelcolor = 'black')
+    axes[1].grid(alpha = 0.5)
+
+    # plt.suptitle("Time and Energy error \n $t_f$ = %0.3f and $h$ = %0.3f"%(t_end, h), fontsize = 18)
+    plt.tight_layout()
+    plt.savefig('./Experiments/AsteroidVsTime/timeVsError_%dyr.png' % t_end)
+    plt.show()
+
+def plot_asteroids_accel():
+    """
+    plot_asteroids_accel: plot asteroids vs time and asteroids vs energy error for computation time 
+    only with accel calculation
+    """
+    # Load data
+    with h5py.File("./Experiments/AsteroidVsTime/asteroids_timeEnergy.h5", 'r') as h5f:
+        data = {}
+        for dset in h5f.keys():
+            data[dset] = h5f[dset][()]
+
+    # t_num = data['time']
+    t_num = data['time_accel']
+    e_energy = data['energy']
+    h, t_end = data['settings']
+    asteroids = data['asteroids']
+
+    ########################################################
+    #### Plots together
+    ########################################################
+    fig, axes = plt.subplots(1,2, figsize=(16,5), gridspec_kw={'width_ratios': [1.3, 1]})
+    fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.5, wspace= 0.55)
+
+    axes[0].plot(asteroids, t_num[:,0], color = color1[0],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
+    axes[0].plot(asteroids, t_num[:,1], color = color1[1],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
+    axes[0].plot(asteroids, t_num[:,2], color = color1[2],  linestyle='-', linewidth = 2, marker = '^', markersize = 12,label = 'WH-HNN')
+    
+
+    # t_1 = t_num[7, 1] / ((asteroids[7]+2) * np.log(asteroids[7]+2))  # First time is for 5 asteroids (+2 planets). time per operation
+    # axes[0].plot(asteroids, t_1 *((asteroids+2) * np.log(asteroids+2)) , color = 'blue', linewidth = 3, alpha = 0.5, linestyle = '--', label = 'N log(N)' )
+    t_2 = t_num[7, 0] / (asteroids[7]+2)**2 
+    axes[0].plot(asteroids, t_2 *((asteroids+2)**2) , color = 'black', linewidth = 3, alpha = 0.5, linestyle = '--', label = r'$N^2$' )
+    t_3 = t_num[8, 1] / ((asteroids[8]+2)) # First time is for 5 asteroids (+2 planets). time per operation
+    axes[0].plot(asteroids, t_3 *(asteroids+2)  , color = 'black', linewidth = 3, alpha = 0.5, linestyle = ':', label = r'$N$' )
+    
+
+    axes[0].set_xlabel('Number of asteroids', fontsize = 27)
+    axes[0].set_ylabel('Computation time (s)', fontsize = 27)
+    axes[0].set_xscale('log')
+    axes[0].set_yscale('log')
+    axes[0].grid(alpha = 0.5)
+    
+    axes[0].tick_params(axis='both', which='major', labelsize=25)
+    axes[0].tick_params(axis='both', which='minor', labelsize=25)
+    axes[0].legend(fontsize = 22)
+
+    # axins = axes[0].inset_axes([0.72, 0.12, 0.25, 0.4])
+    # axins.plot(asteroids[-3:], t_num[-3:,0], color = color1[0],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
+    # axins.plot(asteroids[-3:], t_num[-3:,1], color = color1[1],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
+    # axins.plot(asteroids[-3:], t_num[-3:,2], color = color1[2],  linestyle='-', linewidth = 2, marker = '^', markersize = 12,label = 'WH-HNN')
+
+    # x1, x2, y1, y2 = (asteroids[-3]+asteroids[-2])/2, asteroids[-1]*1.1, (t_num[-3,1]+t_num[-2,1])/2, t_num[-1,0]*1.1
+    # axins.set_xlim(x1, x2)
+    # axins.set_ylim(y1, y2)
+    # axins.tick_params(axis='both', which='major', labelsize=18)
+    # axins.tick_params(axis='both', which='minor', labelsize=18)
+    # axins.set_yscale('linear')
+
+    # axes[0].indicate_inset_zoom(axins, edgecolor="black")
 
     e_rel = abs( ( np.sum(e_energy[:,0,-10:], axis = 1)/10 - e_energy[:,0,0])  / e_energy[:,0,0] ) *1e5
     e_rel2 = abs( ( np.sum(e_energy[:,1,-10:], axis = 1)/10 - e_energy[:,1,0])  / e_energy[:,1,0] ) *1e5

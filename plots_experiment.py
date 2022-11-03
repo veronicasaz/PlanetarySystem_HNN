@@ -19,7 +19,8 @@ from plots_papers import plot_NeurIPS,  \
                 plot_general_flagvsnoflag,\
                 plot_energyvsH,\
                 plot_accel_flagvsnoflag, plot_accel_flagvsR,\
-                plot_asteroids, polifit, plot_errorPhaseOrbit
+                plot_asteroids, plot_asteroids_accel,\
+                polifit, plot_errorPhaseOrbit
 
 def load_model(multiple):
     """
@@ -343,19 +344,19 @@ def run_asteroids(R):
     multiple = 'Asteroid_JS' # False: one network for all, Asteroid_JS: one for asteroids, one for JS, 1,2, 3... number to average
     nih_model = load_model_asteroids()
 
-    t_end = 20
+    t_end = 2
     h = 1.0e-1
 
     savedata = dict()
 
-    asteroids = [5, 10, 20, 30, 50, 70, 100, 200, 500, 1000]
+    asteroids = [5, 10, 20, 30, 50, 70, 100, 200, 500, 1000, 2000]
     t_num = np.zeros((len(asteroids), 3))
     t_num2 = np.zeros((len(asteroids), 3))
     e_energy = np.zeros((len(asteroids), 3, int(t_end//h)+1))
     
     for test in range(len(asteroids)):
         m_a = np.random.uniform(low = 1e19, high = 1e20, size = (asteroids[test],)) /1.9891e30 # To mass of the sun
-        a_a = np.linspace(1.6, 4.0, num= asteroids[test])
+        a_a = np.linspace(2.0, 3.5, num= asteroids[test])
         f_a = np.linspace(0, 2*np.pi, num= asteroids[test])
         # np.random.shuffle(m_a)
         np.random.shuffle(a_a)
@@ -525,7 +526,7 @@ if __name__ == "__main__":
     h = 1e-1
     
     # Choose experiment from 1 to 6
-    run = 6
+    run = 4
     if run == 1:
         """
         Run simulation and plot trajectories
@@ -636,7 +637,8 @@ if __name__ == "__main__":
         # Asteroids vs time and energy
         ##########################################
         # run_asteroids(0.25)
-        plot_asteroids()
+        # plot_asteroids()
+        plot_asteroids_accel()
         # polifit()
 
     elif run == 5:
