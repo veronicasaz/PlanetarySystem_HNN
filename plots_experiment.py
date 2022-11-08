@@ -110,50 +110,8 @@ def load_DNN(multiple):
         ANN_tf.load_model_fromFile(path_model+'JS/Model_JS_DNN/')
         return ANN_tf
     
-def calculate_centralH(data, m):
-    """
-    calculate_centralH: calculate energy due to central body, potential + kinetic
-    INPUTS: 
-        data: samples and positions/velocities
-        m: masses
-    OUTPUTS:
-        H: energy 
-    """
-    T = 0
-    U = 0
-    G = sr.G
-    r = data[:, 0:3]
-    v = data[:, 3:]
-    particles = np.shape(data)[0]
-    for i in range(particles):
-        T += m[i] * np.linalg.norm(v[i,:])**2 / 2 
-    for j in range(1, particles):
-        U -= G * m[0] *m[i] / np.linalg.norm(r[0, :]- r[i,:])
-    H = T + U
-    return H
 
-def calculate_interH(data, m):
-    """
-    calculate_inteH: calculate interactive energy (energy due to mutual interactions)
-    INPUTS: 
-        data: samples and positions/velocities
-        m: masses
-    OUTPUTS:
-        H: energy 
-    """
-    T = 0
-    U = 0
-    G = sr.G
-    r = data[:, 0:3]
-    v = data[:, 3:]
-    particles = np.shape(data)[0]
-    for i in range(1, particles): # exclude central body
-        for j in range(i+1, particles):
-            U -= G * m[i] * m[j] / np.linalg.norm(r[j,:]- r[i,:])
-    H = U
-    return H
-
-def add_particles(sim, asateroids, asteroids_extra):
+def add_particles(sim, sr, asteroids, asteroids_extra):
     """
     add_particles: add particles to integrator
     INPUTS: 
@@ -165,7 +123,8 @@ def add_particles(sim, asateroids, asteroids_extra):
     """
     # Choose masses, semi-major axis, and true anomaly for the asteroids
     m_a = np.array([1e19, 2e19, 5e19, 1e20]) / 1.9891e30 # To mass of the sun
-    a_a = np.linspace(2.2, 3.2, num= asteroids)
+    # a_a = np.linspace(2.2, 3.2, num= asteroids)
+    a_a = np.array([2.8, 3.2])
     f_a = np.linspace(0, 2*np.pi, num= asteroids)
     # np.random.shuffle(a_a)
     # np.random.shuffle(f_a)
@@ -210,7 +169,7 @@ def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name, R):
     sr.save('ic_sun_jupiter_saturn.bin')
 
     sim = WisdomHolman(CONST_G=sr.G, accel_file_path = "./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
-    sim = add_particles(sim, asteroids, asteroids_extra)
+    sim = add_particles(sim, sr, asteroids, asteroids_extra)
 
     t0_num = time.time()
     sim.output_file = './Experiments/sun_jupiter_saturn/sun_jupiter_saturn_nb'+name+'.hdf5'
@@ -238,7 +197,7 @@ def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name, R):
                         accel_file_path = "./Experiments/sun_jupiter_saturn/accelerations_ANN.txt",\
                         flag = flag, \
                         multiple_nets = multiple, R= R)
-    sim2 = add_particles(sim2, asteroids, asteroids_extra)
+    sim2 = add_particles(sim2, sr, asteroids, asteroids_extra)
 
     t0_nn = time.time()
     sim2.output_file = './Experiments/sun_jupiter_saturn/sun_jupiter_saturn_nih'+name+'.hdf5'
@@ -267,7 +226,7 @@ def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name, R):
                         flag = flag, \
                         multiple_nets = multiple, R = R)
     # sim.integrator = 'WisdomHolman'
-    sim3 = add_particles(sim3, asteroids, asteroids_extra)
+    sim3 = add_particles(sim3, sr, asteroids, asteroids_extra)
 
     t0_dnn = time.time()
     sim3.output_file = './Experiments/sun_jupiter_saturn/sun_jupiter_saturn_dnn'+name+'.hdf5'
@@ -344,7 +303,7 @@ def run_asteroids(R):
     multiple = 'Asteroid_JS' # False: one network for all, Asteroid_JS: one for asteroids, one for JS, 1,2, 3... number to average
     nih_model = load_model_asteroids()
 
-    t_end = 2
+    t_end = 20
     h = 1.0e-1
 
     savedata = dict()
@@ -472,9 +431,17 @@ def compute_predError(t_end, h, asteroids, asteroids_extra):
     """
     compute_predError for errorPhaseOrbit
     """
+    sr = rebound.Simulation()
+    sr.units = {'yr', 'au', 'MSun'}
+
+    sr.add('Sun')
+    sr.add('Jupiter')
+    sr.add('Saturn')
+    sr.save('ic_sun_jupiter_saturn.bin')
+
     # Run numerically
     sim = WisdomHolman(CONST_G=sr.G, accel_file_path = "./Experiments/sun_jupiter_saturn/accelerations_WH.txt")
-    sim = add_particles(sim, asteroids, asteroids_extra)
+    sim = add_particles(sim, sr,  asteroids, asteroids_extra)
 
     sim.output_file = './Experiments/sun_jupiter_saturn/sun_jupiter_saturn_nb'+'_phaseError'+'.hdf5'
     sim.integrator_warmup()
@@ -536,7 +503,7 @@ if __name__ == "__main__":
             asteroids = 0
             asteroids_extra = 0
         else:
-            t_end = 100
+            t_end = 1000
             asteroids = 2
             asteroids_extra = 1
 
@@ -578,7 +545,7 @@ if __name__ == "__main__":
         flags = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_ANN.txtflag_list.txt")
         flags_DNN = np.loadtxt("./Experiments/sun_jupiter_saturn/accelerations_DNN.txtflag_list.txt")
         plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, \
-                    flags, [t, t_f], asteroids, asteroids_extra)
+                    flags, [t, t_f], asteroids, asteroids_extra, t_end)
 
     elif run == 3:
         """
@@ -636,7 +603,7 @@ if __name__ == "__main__":
         ##########################################
         # Asteroids vs time and energy
         ##########################################
-        # run_asteroids(0.25)
+        run_asteroids(0.25)
         # plot_asteroids()
         plot_asteroids_accel()
         # polifit()
@@ -650,7 +617,7 @@ if __name__ == "__main__":
         asteroids = 0
         asteroids_extra = 0
         sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, False, '', 0.3)            
-        plot_energyvsH(sim, sim2)
+        plot_energyvsH(sim, sim2, t_end)
 
     elif run == 6:
         t_end = 1000

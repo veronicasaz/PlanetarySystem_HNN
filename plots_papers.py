@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib 
 from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import FormatStrFormatter
+import rebound
 import h5py
 
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
@@ -112,6 +114,9 @@ def plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_ext
     line = ['-', '-',  '-', '-', '-','-', '-', '-', '-','-', '-', '-', '-']
     lnwidth = 3
     
+    for col in range(3):
+        axes[0,col].scatter(data_nb['x'][:,0], data_nb['y'][:,0], linestyle = line[0], s = 20, color = 'black', label=names[0])
+
     for i in range(1, data_nih['x'].shape[1]):
         axes[0,0].plot(data_nb['x'][:,i], data_nb['y'][:,i], linestyle = line[i], linewidth = lnwidth, color = color2[i-1], label=names[i])
         axes[0,1].plot(data_nih['x'][:,i], data_nih['y'][:,i], linestyle = line[i],linewidth = lnwidth, color = color2[i-1], label=names[i])
@@ -122,18 +127,28 @@ def plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_ext
         axes[1,1].plot(time, data_nih['ecc'][:,i], linestyle = line[i],  color = color2[i-1], linewidth = lnwidth, label=names[i])
         axes[1,2].plot(time, data_dnn['ecc'][:,i], linestyle = line[i],  color = color2[i-1],linewidth = lnwidth,  label=names[i])            
 
-    axes[0,0].set_title("Numerical integrator result", fontsize = titlesize)
-    axes[0,1].set_title("Hamiltonian Neural Network result", fontsize = titlesize)
-    axes[0,2].set_title("Deep Neural Network result", fontsize = titlesize)
+    axes[0,0].set_title("Numerical integrator", fontsize = titlesize)
+    axes[0,1].set_title("Hamiltonian Neural Network", fontsize = titlesize)
+    axes[0,2].set_title("Deep Neural Network", fontsize = titlesize)
 
+
+    min_lim = data_nb['ecc'][:, 1:].min()
+    max_lim = data_nb['ecc'][:, 1:].max()
     for col in range(3):
-        axes[0,col].scatter(data_nb['x'][:,0], data_nb['y'][:,0], linestyle = line[0], s = 20, color = 'black', label=names[0])
         axes[0,col].axis('equal')
-        axes[0,col].set_xlabel('$x$ (au)',fontsize = labelsize)
-        axes[0,col].set_ylabel('$y$ (au)',fontsize = labelsize)
+        axes[0,col].set_xlabel('x (au)',fontsize = labelsize)
+        axes[0,col].set_ylabel('y (au)',fontsize = labelsize)
         
-        axes[1,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
-        axes[1,col].set_ylabel('$e$',fontsize = labelsize)
+        axes[1,col].set_xlabel('t (yr)',fontsize = labelsize)
+        axes[1,col].set_ylabel('e',fontsize = labelsize)
+
+        axes[0, col].set_xlim(data_nb['x'].min()*1.1, data_nb['x'].max()*1.1)
+        axes[0, col].set_ylim(data_nb['y'].min()*1.1, data_nb['y'].max()*1.1)
+        axes[1, col].set_xlim(time.min()-50, time.max()+50)
+        axes[1, col].set_ylim(min_lim*0.9, max_lim*1.2)
+        # axes[1, col].set_xlim(min(data_nb['ecc'])*0.9, max(data_nb['ecc'])*1.1)
+        # axes[1, col].set_ylim(min(data_nb['ecc'])*0.9, max(data_nb['ecc'])*1.1)
+
 
     axes[0,0].legend(loc = 'lower left', fontsize = 27, \
                 framealpha = 0.9, bbox_to_anchor=(0.0, 1.22, 3.5, 1.5),\
@@ -143,8 +158,8 @@ def plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_ext
         for j in range(3):
             axes[i,j].tick_params(axis='both', which='major', labelsize=25)
             axes[i,j].tick_params(axis='both', which='minor', labelsize=25)
-            axes[i, j].locator_params(axis = 'x', nbins=6)
-            axes[i, j].locator_params(axis = 'y', nbins=6)
+            axes[i, j].locator_params(axis = 'x', nbins=5)
+            axes[i, j].locator_params(axis = 'y', nbins=5)
 
     plt.tight_layout()
     plt.savefig('./Experiments/sun_jupiter_saturn/sun_jupiter_saturn_%dyr.pdf' % t_end)
@@ -197,32 +212,50 @@ def plot_CompPhys_trajectory_JS(sim, sim2, sim3, t, t_end, asteroids, asteroids_
         axes[1,2].plot(time, data_dnn['ecc'][:,i], linestyle = line[i],  color = color2[i-1],linewidth = lnwidth,  label=names[i])            
 
     # energy drift in the second column
-    color_e = color2[2]
-    color_e2 = color2[3]
-    color_e3 = color2[4]
+    color_e = color2[5]
+    color_e2 = color2[6]
+    color_e3 = color2[7]
     lnwidth = 2
 
     axes[2,1].plot(time, np.array(sim2.energy)*1e3,  linestyle = '-',  linewidth = lnwidth,color = color_e2,alpha=1, label= 'Error with WH-HNN')
     axes[2,2].plot(time, np.array(sim3.energy) *1e3, alpha=1, linestyle = '-',linewidth = lnwidth, color = color_e3,label= 'Error with WH-DNN')
 
-    axes[0,0].set_title("Numerical integrator result", fontsize = titlesize)
-    axes[0,1].set_title("Hamiltonian Neural Network result", fontsize = titlesize)
-    axes[0,2].set_title("Deep Neural Network result", fontsize = titlesize)
+    axes[0,0].set_title("Numerical integrator", fontsize = titlesize)
+    axes[0,1].set_title("Hamiltonian Neural Network", fontsize = titlesize)
+    axes[0,2].set_title("Deep Neural Network", fontsize = titlesize)
     
-    axes[0,0].set_ylabel('$y$ (au)',fontsize = labelsize)
-    axes[1,0].set_ylabel('$e$',fontsize = labelsize)  
-    axes[2,0].set_ylabel(r'$dE/E_0 \;\times 10^3$',fontsize = labelsize)
+    axes[0,0].set_ylabel('y (au)',fontsize = labelsize)
+    axes[1,0].set_ylabel('e',fontsize = labelsize)  
+    axes[2,0].set_ylabel(r'$dE/E_0 \;(\times 10^{-3})$',fontsize = labelsize)
 
+    min_lim = data_nb['ecc'][:, 1:].min()
+    max_lim = data_nb['ecc'][:, 1:].max()
     for col in range(3):
         axes[0,col].axis('equal')
-        axes[0,col].set_xlabel('$x$ (au)',fontsize = labelsize)
+        axes[0,col].set_xlabel('x (au)',fontsize = labelsize)
     
-        axes[1,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
+        axes[1,col].set_xlabel('t (yr)',fontsize = labelsize)
         axes[1,col].get_yaxis().set_major_formatter('{x:1.3f}')
 
         axes[2,col].plot(time, np.array(sim.energy) *1e3 , linestyle = '-', linewidth = lnwidth,color = color_e, alpha=1, label = 'Error with WH')
-        axes[2,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
+        axes[2,col].set_xlabel('t (yr)',fontsize = labelsize)
         axes[2,col].ticklabel_format(useOffset=False)
+
+        axes[0, col].set_xlim(data_nb['x'].min()*1.1, data_nb['x'].max()*1.1)
+        axes[0, col].set_ylim(data_nb['y'].min()*1.1, data_nb['y'].max()*1.1)
+        
+        axes[1, col].set_xlim(time.min()-50, time.max()+50)
+        axes[1, col].set_ylim(min_lim*0.99, max_lim*1.01)
+        
+        axes[2, col].set_xlim(time.min()-50, time.max()+50)
+    min_lim2 = min(np.array(sim.energy)*1e3)
+    max_lim2 = max(np.array(sim2.energy)*1e3)
+    min_lim3 = min(np.array(sim3.energy)*1e3)
+    max_lim3 = max(np.array(sim3.energy)*1e3)
+    
+    axes[2, 0].set_ylim(min_lim2 - min_lim2*1e-6, max_lim2 + max_lim2*1e-6)
+    axes[2, 1].set_ylim(min_lim2 - min_lim2*1e-6, max_lim2+ max_lim2*1e-6)
+    axes[2, 2].set_ylim(min_lim3 -min_lim3*1e-4, max_lim3+ max_lim3*1e-5)
         
     axes[0,0].legend(loc = 'lower left', fontsize = 27, \
                 framealpha = 0.9, bbox_to_anchor=(0.0, 1.24, 2.0, 1.5),\
@@ -320,7 +353,7 @@ def plot_general_flagvsnoflag(sim, sim2, sim3, t, asteroids, asteroids_extra):
     plt.show()
 
 def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelerations_ANN_flag, 
-                flags, t, asteroids, asteroids_extra):
+                flags, t, asteroids, asteroids_extra, t_end):
     """
     plot_accelerations_flagvsnoflag: plot accelerations predicted with WH, HNN flag and HNN no flag
     INPUTS:
@@ -360,7 +393,7 @@ def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelera
         l4 = axes[2, plot-2].scatter(x2_DNN, np.delete(a_DNN, index_DNN), color = color1[2], label = 'Numerically')
         axes[0,plot-2].set_title(names[plot-1], fontsize = 24)
         
-        axes[2,plot-2].set_xlabel('$t$ (yr)', fontsize = 28)
+        axes[2,plot-2].set_xlabel('t (yr)', fontsize = 28)
         axes[2,plot-2].annotate("Flags: %i / %i"%(np.count_nonzero(flags[:, plot]), len(accelerations_ANN_flag)), \
                 xy =  (x[0]+0.9, max((a_DNN))*0.9), fontsize = 20)
         
@@ -369,8 +402,10 @@ def plot_accel_flagvsnoflag(accelerations_WH, accelerations_ANN_noflag, accelera
             ticks = -np.log10(axes[iterate,plot-2].get_yticks())
             dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
             axes[iterate,plot-2].set_yticklabels(np.round(trunc(axes[iterate,plot-2].get_yticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 20)
-            axes[iterate,plot-2].set_xticklabels(np.round(trunc(axes[iterate,plot-2].get_xticks(), decs = 5), decimals = dec+1), rotation = 0, fontsize = 20)
-            axes[iterate,0].set_ylabel('a ($au/yr^2$)', fontsize = 28)
+            axes[iterate,plot-2].set_xticklabels(np.round(trunc(axes[iterate,plot-2].get_xticks(), decs = 0), decimals = 0), rotation = 0, fontsize = 20)
+            axes[iterate, plot-2].xaxis.set_major_formatter(FormatStrFormatter('%i'))
+
+            axes[iterate,0].set_ylabel(r'a ($\rm au/yr^2$)', fontsize = 28)
     
     lgnd = axes[0,0].legend([l1, l2, l3, l4], ['WH', 'Without flags', 'With flags', 'Flags'], loc = 'lower left', fontsize = 23, \
                 framealpha = 0.9, bbox_to_anchor=(0.1, 1.3, 3.3, 1.0),\
@@ -463,7 +498,56 @@ def plot_accel_flagvsR(accel_i, accelerations_baseline,\
     plt.savefig('./Experiments/flagvsnoflag/sun_jupiter_saturn_accel_%dyr_flagR.png' % t_end, bbox_inches='tight')
     plt.show()
 
-def plot_energyvsH(sim, sim2):
+def calculate_centralH(data, m):
+    """
+    calculate_centralH: calculate energy due to central body, potential + kinetic
+    INPUTS: 
+        data: samples and positions/velocities
+        m: masses
+    OUTPUTS:
+        H: energy 
+    """
+    sr = rebound.Simulation()
+    sr.units = {'yr', 'au', 'MSun'}
+
+    T = 0
+    U = 0
+    G = sr.G
+    r = data[:, 0:3]
+    v = data[:, 3:]
+    particles = np.shape(data)[0]
+    for i in range(particles):
+        T += m[i] * np.linalg.norm(v[i,:])**2 / 2 
+    for j in range(1, particles):
+        U -= G * m[0] *m[i] / np.linalg.norm(r[0, :]- r[i,:])
+    H = T + U
+    return H
+
+def calculate_interH(data, m):
+    """
+    calculate_inteH: calculate interactive energy (energy due to mutual interactions)
+    INPUTS: 
+        data: samples and positions/velocities
+        m: masses
+    OUTPUTS:
+        H: energy 
+    """
+    sr = rebound.Simulation()
+    sr.units = {'yr', 'au', 'MSun'}
+
+    T = 0
+    U = 0
+    G = sr.G
+    r = data[:, 0:3]
+    v = data[:, 3:]
+    particles = np.shape(data)[0]
+    for i in range(1, particles): # exclude central body
+        for j in range(i+1, particles):
+            U -= G * m[i] * m[j] / np.linalg.norm(r[j,:]- r[i,:])
+    H = U
+    return H
+
+def plot_energyvsH(sim, sim2, t_end):
     """
     Plot interactive energy vs output of the HNN.   
         Only implemented for JS case 
@@ -496,8 +580,8 @@ def plot_energyvsH(sim, sim2):
     axes.plot(time, E_2, '--',  linewidth = lw, color = color1[2], label = 'WH-HNN Energy')
     axes.plot(time, np.array(sim2.H), linewidth = lw, color = color1[1], label = 'WH-HNN H')
     # plt.title('Comparison of interactive Hamiltonian \n and the predicted output of the HNN', fontsize = 13)
-    plt.xlabel('Time ($yr$)', fontsize =30)
-    plt.ylabel(r'Energy $\times 10^6$ (${kg}\; {au}^2\; yr^{-2}$)', fontsize =30)
+    plt.xlabel('t (yr)', fontsize =30)
+    plt.ylabel(r'Energy ($\rm {kg}\; {au}^2\; yr^{-2} \times 10^{-6}$)', fontsize =30)
 
     plt.xticks(fontsize = 25)
     plt.yticks(fontsize = 25)

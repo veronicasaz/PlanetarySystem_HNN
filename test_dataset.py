@@ -12,13 +12,14 @@ sys.path.append(PARENT_DIR)
 import numpy as np 
 import matplotlib.pyplot as plt
 import matplotlib.colors as plc
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
+
 import matplotlib
 import ast
 from nn_tensorflow import  ANN 
 import tensorflow as tf
 
-from plot_tools import trunc, color1, color2 
+from plot_tools import trunc, color1, color2, CustomTicker
 
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
@@ -133,7 +134,7 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
     plt.subplots_adjust(wspace = 0.5, hspace=2.2)
 
-    xlabel = [r'$a_x$', r'$a_y$', r"$a_z$"]
+    xlabel = [r'\rm x', r'\rm y', r"\rm z"]
     title = ['Jupiter', 'Saturn', 'Asteroids']
     for sbu in range(subplot1):
         subfigs[sbu].subplots_adjust(left = 0.07, right = 0.82, wspace = 0.4, hspace = 2.0, top = 0.89, bottom = 0.25)
@@ -158,16 +159,23 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
             # Normalize axis
             if sbu == 0:
                 norm = 1e4
-                ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^4$ ($au/yr^2$)", fontsize = 32)
-                ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^4$ ($au/yr^2$)", fontsize = 32)
+                # ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^4$ ($au/yr^2$)", fontsize = 32)
+                # ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^4$ ($au/yr^2$)", fontsize = 32)
+
+                ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
+                ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
             elif sbu == 1:
                 norm = 1e3
-                ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^3$ ($au/yr^2$)", fontsize = 32)
-                ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^3$ ($au/yr^2$)", fontsize = 32)
+                # ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^3$ ($au/yr^2$)", fontsize = 32)
+                # ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^3$ ($au/yr^2$)", fontsize = 32)
+                ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
+                ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
             elif sbu == 2:
                 norm = 1
-                ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real ($au/yr^2$)", fontsize = 32)
-                ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted ($au/yr^2$)", fontsize = 32)
+                # ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real ($au/yr^2$)", fontsize = 32)
+                # ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted ($au/yr^2$)", fontsize = 32)
+                ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 32)
+                ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 32)
             
 
             ticks = -np.log10(ax[sbu2].get_xticks())
@@ -277,7 +285,7 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
     plt.subplots_adjust(wspace = 0.5, hspace=2.2)
 
-    xlabel = [r'ax', r'ay', r"az"]
+    xlabel = [r'\rm x', r'\rm y', r"\rm z"]
     title = ['Jupiter', 'Saturn']
     for sbu in range(subplot1):
         subfigs[sbu].suptitle(title[sbu], fontsize = 35, x=0.41, y=.97, horizontalalignment='left')
@@ -290,8 +298,8 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
             ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color1[0], marker = 'o', s = 50, zorder = 3)
             ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 's', s = 50, zorder =2)
 
-            ax[sbu2].set_xlabel(r"$%s_{real}  \;(au/yr^2)$"%xlabel[int(var%3)], fontsize = 35)
-            ax[sbu2].set_ylabel(r"$%s_{pred}\;(au/yr^2)$"%(xlabel[int(var%3)]), fontsize = 35)
+            ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 35)
+            ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}\;(\rm au/yr^2)$"%(xlabel[int(var%3)]), fontsize = 35)
             if sbu2 == 2:
                 ax[sbu2].set_xscale('symlog', linthresh = 1e-5)
                 ax[sbu2].set_yscale('symlog', linthresh = 1e-5)
@@ -299,15 +307,16 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
                 ax[sbu2].set_xscale('symlog', linthresh = 1e-5)
                 ax[sbu2].set_yscale('symlog', linthresh = 1e-5)
             
-            ticks = -np.log10(abs(ax[sbu2].get_xticks()))
-            dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )+1
-            ax[sbu2].set_xticklabels(np.round(trunc(ax[sbu2].get_xticks(), decs = 6), decimals = dec), rotation = 40, fontsize = 27)
+            ticks = -np.log10(ax[sbu2].get_xticks())
+            dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )           
+            ax[sbu2].set_xticklabels(trunc(np.round(ax[sbu2].get_xticks(), decimals = dec), decs = 4) , rotation = 20, fontsize = 27)
+            
             ticks = -np.log10(abs(ax[sbu2].get_yticks()))+1
             dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
             ax[sbu2].set_yticklabels(np.round(trunc(ax[sbu2].get_yticks(), decs = 6), decimals = dec), fontsize = 27)
 
-            ax[sbu2].get_xaxis().set_major_formatter(plt.LogFormatter(10,  labelOnlyBase=False))
-            ax[sbu2].get_yaxis().set_major_formatter(plt.LogFormatter(10,  labelOnlyBase=False))
+            ax[sbu2].xaxis.set_major_formatter(CustomTicker())
+            ax[sbu2].yaxis.set_major_formatter(CustomTicker())
             ax[sbu2].grid(alpha = 0.2)
         
         if sbu == 0:
