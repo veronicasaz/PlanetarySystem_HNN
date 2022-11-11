@@ -15,7 +15,7 @@ import seaborn as sns
 import pandas as pd 
 from data import get_dataset
 
-from plot_tools import trunc, color1, color2
+from plot_tools import trunc, color1, color2, CustomTicker
 
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 matplotlib.rcParams['font.family'] = 'STIXGeneral'
@@ -106,12 +106,12 @@ def plot_distribution(coords, dcoords, namefile, name):
     fig, axes = plt.subplots(figsize = (12,8),nrows=n_rows, ncols=n_cols)
     fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.1)
     if name == 'asteroid/':
-        title = [r'Jupiter mass ($m_{Sun}$)',r'Jupiter x ($au$)', r'Jupiter y ($au$)', r'Jupiter z ($au$)',\
-             r'Saturn mass ($m_{Sun}$)',r'Saturn x ($au$)', r'Saturn y ($au$)', r'Saturn z ($au$)', \
-             r'Asteroid mass ($\times 10^{8}$) ($m_{Sun}$)', r'Asteroid x ($au$)', r'Asteroid y ($au$)', r'Asteroid z ($au$)']
-        title_o = [r'Jupiter $a_x$ ($au\;/\;  yr^2$)', r'Jupiter $a_y$ ($au\;/\;    yr^2$)', r'Jupiter $a_z$ ($au\;/\;    yr^2$)',\
-             r'Saturn $a_x$ ($au\;/\;    yr^2$)', r'Saturn $a_y$ ($au\;/\;    yr^2$)', r'Saturn $a_z$ ($au\;/\;    yr^2$)', \
-             r'Asteroid $a_x$ ($au\;/\;    yr^2$)', r'Asteroid $a_y$ ($au\;/\;    yr^2$)', r'Asteroid $a_z$ ($au\;/\;    yr^2$)']
+        title = [r'Jupiter mass ($\rm m_{Sun}$)',r'Jupiter x (au)', r'Jupiter y (au)', r'Jupiter z (au)',\
+             r'Saturn mass ($\rm m_{Sun}$)',r'Saturn x (au)', r'Saturn y (au)', r'Saturn z (au)', \
+             r'Asteroid mass ($\rm m_{Sun} \times 10^{-8}$)', r'Asteroid x (au)', r'Asteroid y (au)', r'Asteroid z (au)']
+        title_o = [r'Jupiter $a_x$ (au $\rm yr^2$)', r'Jupiter $a_y$ ($\rm au\;/\;    yr^2$)', r'Jupiter $a_z$ ($\rm au\;/\;    yr^2$)',\
+             r'Saturn $a_x$ ($\rm au\;/\;    yr^2$)', r'Saturn $a_y$ ($\rm au\;/\;    yr^2$)', r'Saturn $a_z$ ($\rm au\;/\;    yr^2$)', \
+             r'Asteroid $a_x$ ($\rm au\;/\;    yr^2$)', r'Asteroid $a_y$ ($\rm au\;/\;    yr^2$)', r'Asteroid $a_z$ ($\rm au\;/\;    yr^2$)']
     else:
         title = [r'Jupiter mass ($m_{Sun}$)',r'Jupiter x ($au$)', r'Jupiter y ($au$)', r'Jupiter z ($au$)',\
              r'Saturn mass ($m_{Sun}$)',r'Saturn x ($au$)', r'Saturn y ($au$)', r'Saturn z ($au$)']
@@ -123,8 +123,13 @@ def plot_distribution(coords, dcoords, namefile, name):
         ax.hist(coords[:, j], bins = 20, histtype = 'bar', color = color1[0], edgecolor="white")
         ax.set_xlabel(title[j], fontsize = 18)
         ax.set_ylabel("Frequency", fontsize = 18)
-        ax.set_xticklabels(trunc(ax.get_xticks(), decs = 3),  fontsize=15)
-        ax.get_xaxis().set_major_formatter('{x:1.2f}')
+        
+        # ax.set_xticklabels(trunc(ax.get_xticks(), decs = 6),  fontsize=15)
+        # ax.get_xaxis().set_major_formatter('{x:1.2f}')
+        ticks = -np.log10(ax.get_xticks())
+        dec = int(np.round(np.nanmax(ticks[ticks!= np.inf]), 0) )
+        ax.set_xticklabels(trunc(np.round(ax.get_xticks(), decimals = dec), decs = 4) , rotation = 0, fontsize = 15)
+
         ax.set_yticklabels(ax.get_yticks(), fontsize = 15)
     # plt.suptitle('Distribution of inputs', y=0.98, fontsize = 20)
     plt.tight_layout()
@@ -157,6 +162,8 @@ def plot_distribution(coords, dcoords, namefile, name):
         # ax.set_yscale("symlog",linthresh=1.e-6)
         ax.set_xlabel(title_o[j], fontsize = 18)
         ax.set_ylabel("Frequency", fontsize = 18)
+
+        ax.xaxis.set_major_formatter(CustomTicker())
     # plt.suptitle('Distribution of outputs', y=0.98, fontsize = 20)
     plt.tight_layout()
     plt.savefig( "./dataset/"+name+"output_distribution"+namefile+".png", dpi = 100)

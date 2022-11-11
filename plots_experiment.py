@@ -603,7 +603,7 @@ if __name__ == "__main__":
         ##########################################
         # Asteroids vs time and energy
         ##########################################
-        run_asteroids(0.25)
+        # run_asteroids(0.25)
         # plot_asteroids()
         plot_asteroids_accel()
         # polifit()

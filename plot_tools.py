@@ -12,7 +12,7 @@ def trunc(values, decs=0):
 
 class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
-        if x not in [0.1,1,10]:
+        if x not in [1,10]:
             return LogFormatterSciNotation.__call__(self,x, pos=None)
         else:
             return "{x:g}".format(x=x)
