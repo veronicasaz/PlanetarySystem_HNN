@@ -11,7 +11,7 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 matplotlib.rcParams['axes.formatter.useoffset'] = False
 
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
-from plot_tools import color1, color2, trunc
+from plot_tools import color1, color2, trunc, CustomTicker
 
 
 def plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot):
@@ -696,7 +696,7 @@ def plot_asteroids_accel():
     ########################################################
     #### Plots together
     ########################################################
-    fig, axes = plt.subplots(1,2, figsize=(16,5), gridspec_kw={'width_ratios': [1.3, 1]})
+    fig, axes = plt.subplots(1,2, figsize=(16,5.5), gridspec_kw={'width_ratios': [1.3, 1]})
     fig.subplots_adjust(top=0.9,left = 0.09, right = 0.98, hspace = 0.5, wspace= 0.55)
 
     axes[0].plot(asteroids, t_num[:,0], color = color1[0],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
@@ -720,21 +720,8 @@ def plot_asteroids_accel():
     
     axes[0].tick_params(axis='both', which='major', labelsize=25)
     axes[0].tick_params(axis='both', which='minor', labelsize=25)
-    axes[0].legend(fontsize = 22)
-
-    # axins = axes[0].inset_axes([0.72, 0.12, 0.25, 0.4])
-    # axins.plot(asteroids[-3:], t_num[-3:,0], color = color1[0],  linestyle='-', linewidth = 2, marker = 'o', markersize = 10,label = 'WH')
-    # axins.plot(asteroids[-3:], t_num[-3:,1], color = color1[1],  linestyle='-', linewidth = 2, marker = 'x',markersize = 10, label = 'HNN')
-    # axins.plot(asteroids[-3:], t_num[-3:,2], color = color1[2],  linestyle='-', linewidth = 2, marker = '^', markersize = 12,label = 'WH-HNN')
-
-    # x1, x2, y1, y2 = (asteroids[-3]+asteroids[-2])/2, asteroids[-1]*1.1, (t_num[-3,1]+t_num[-2,1])/2, t_num[-1,0]*1.1
-    # axins.set_xlim(x1, x2)
-    # axins.set_ylim(y1, y2)
-    # axins.tick_params(axis='both', which='major', labelsize=18)
-    # axins.tick_params(axis='both', which='minor', labelsize=18)
-    # axins.set_yscale('linear')
-
-    # axes[0].indicate_inset_zoom(axins, edgecolor="black")
+    # axes[0].legend(fontsize = 21, framealpha = 0.5, loc='best', bbox_to_anchor=(0.5, 0., 0.5, 0.5))
+    axes[0].legend(fontsize = 21, framealpha = 0.5, loc='best')
 
     e_rel = abs( ( np.sum(e_energy[:,0,-10:], axis = 1)/10 - e_energy[:,0,0])  / e_energy[:,0,0] ) *1e5
     e_rel2 = abs( ( np.sum(e_energy[:,1,-10:], axis = 1)/10 - e_energy[:,1,0])  / e_energy[:,1,0] ) *1e5
@@ -745,7 +732,7 @@ def plot_asteroids_accel():
     axes[1].plot([], [], color = 'black', linestyle = '--', label = 'HNN')
     axes[1].plot([], [], color = 'black', linestyle = '-', label = 'WH-HNN ')
     axes[1].set_xlabel('Number of asteroids', fontsize = 27)
-    axes[1].set_ylabel(r'$t - t_{WH}$ (s)', fontsize = 27, color = color1[0])
+    axes[1].set_ylabel(r'$\rm t - t_{WH}$ (s)', fontsize = 27, color = color1[0])
     axes[1].set_xscale('log')
     axes[1].set_yscale('symlog', linthresh = 1)
     axes[1].tick_params(axis='both', which='major', labelsize=25)
@@ -755,7 +742,7 @@ def plot_asteroids_accel():
     ax2 = axes[1].twinx()
     ax2.plot(asteroids, e_rel2-e_rel, linestyle = '--', linewidth = 2, color = color1[2])
     ax2.plot(asteroids, e_rel3-e_rel, linestyle = '-', linewidth = 2, color = color1[2])
-    ax2.set_ylabel(r'$\varepsilon - \varepsilon_{WH} \; _{(\times1e5)}$ ', fontsize = 27, color = color1[2])
+    ax2.set_ylabel(r'$\rm \varepsilon - \varepsilon_{WH} \; _{(\times10^{-5})}$ ', fontsize = 27, color = color1[2])
     ax2.tick_params(axis='y', which='major', labelsize=25)
     ax2.tick_params(axis='y', which='minor', labelsize=25)
     ax2.tick_params(axis='y', labelcolor = color1[2])
