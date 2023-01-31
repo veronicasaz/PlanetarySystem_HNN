@@ -4,7 +4,8 @@ from matplotlib.ticker import LogFormatterSciNotation
 
 # COLORS
 color1 = ['navy', 'dodgerblue','darkorange']
-color2 = ['dodgerblue', 'navy', 'orangered', 'saddlebrown', 'olivedrab',  'saddlebrown', 'darkorange', 'red' ]
+color2 = ['dodgerblue', 'navy', 'orangered','saddlebrown', 'olivedrab', 'darkorange',  'saddlebrown', 'darkorange', 'red' ]
+color3 = ['navy', 'lightgreen', 'darkorange']
 
 # TRUNCATE
 def trunc(values, decs=0):

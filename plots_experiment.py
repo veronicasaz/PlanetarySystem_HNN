@@ -493,7 +493,7 @@ if __name__ == "__main__":
     h = 1e-1
     
     # Choose experiment from 1 to 6
-    run = 4
+    run = 1
     if run == 1:
         """
         Run simulation and plot trajectories
@@ -513,8 +513,10 @@ if __name__ == "__main__":
         sim, sim2, sim3, t = simulate(t_end, h, asteroids, asteroids_extra, multiple, True, '', 0.3)   
         if multiple == 'JS':
             plot_CompPhys_trajectory_JS(sim, sim2, sim3, t, t_end, asteroids, asteroids_extra, typePlot = multiple)
+            # plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot = multiple)
         else:         
             plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_extra, typePlot = multiple)
+            # plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot = multiple)
 
     elif run == 2: 
         """

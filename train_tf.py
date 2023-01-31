@@ -58,6 +58,7 @@ def get_data(config, name = None, plot = False):
     
     print("Training samples:", np.shape(data2['coords']))
 
+
     # Plot
     if plot == True: # choose plots to make
         plot_distribution(data2['coords'], data2['dcoords'], '', name)
@@ -219,7 +220,7 @@ if __name__ == "__main__":
     
     ####### PREDICT ########
     path_pic = "./ANN_tf/" + name +'/'
-    predict(path_pic, settings, settings_file_path, data)
+    # predict(path_pic, settings, settings_file_path, data)
 
     # Before doing this, move the trained models to the corresponding folders
     predict_HNNvsDNN(path_pic, settings, settings_file_path, data, name)

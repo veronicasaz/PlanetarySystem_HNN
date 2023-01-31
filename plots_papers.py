@@ -11,7 +11,7 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 matplotlib.rcParams['axes.formatter.useoffset'] = False
 
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
-from plot_tools import color1, color2, trunc, CustomTicker
+from plot_tools import color1, color2, color3, trunc, CustomTicker
 
 
 def plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typePlot):
@@ -42,16 +42,18 @@ def plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typeP
 
     labelsize = 25
     titlesize = 24
-    colors = [color[8], color[9], color[3], color[6], color[0], color[10], color[5], color[7], color[1], color[11]]
     line = ['-', '--', '-.', '-', '--', '-.', ':','-', '--', '-.', ':','-', '--', '-.', ':']
     lnwidth = 3
-    axes[0,0].set_title("Numerical integrator result: %.1f s"%(t_num), fontsize = titlesize)
-    axes[0,1].set_title("Hamiltonian Neural Network result: %.1f s"%(t_nn), fontsize = titlesize)
-    axes[0,2].set_title("Deep Neural Network result: %.1f s"%(t_dnn), fontsize = titlesize)
+    # axes[0,0].set_title("Numerical integrator result: %.1f s"%(t_num), fontsize = titlesize)
+    # axes[0,1].set_title("Hamiltonian Neural Network result: %.1f s"%(t_nn), fontsize = titlesize)
+    # axes[0,2].set_title("Deep Neural Network result: %.1f s"%(t_dnn), fontsize = titlesize)
+    axes[0,0].set_title("Numerical integrator", fontsize = titlesize)
+    axes[0,1].set_title("Hamiltonian Neural Network", fontsize = titlesize)
+    axes[0,2].set_title("Deep Neural Network", fontsize = titlesize)
     for i in range(1, data_nih['x'].shape[1]):
-        axes[0,0].plot(time, data_nb['ecc'][:,i], linestyle = line[i],  color = colors[i], linewidth = lnwidth, label=names[i])
-        axes[0,1].plot(time, data_nih['ecc'][:,i], linestyle = line[i],  color = colors[i], linewidth = lnwidth, label=names[i])
-        axes[0,2].plot(time, data_dnn['ecc'][:,i], linestyle = line[i],  color = colors[i],linewidth = lnwidth,  label=names[i])
+        axes[0,0].plot(time, data_nb['ecc'][:,i], linestyle = line[i],  color = color2[i-1], linewidth = lnwidth, label=names[i])
+        axes[0,1].plot(time, data_nih['ecc'][:,i], linestyle = line[i],  color = color2[i-1], linewidth = lnwidth, label=names[i])
+        axes[0,2].plot(time, data_dnn['ecc'][:,i], linestyle = line[i],  color = color2[i-1],linewidth = lnwidth,  label=names[i])
     
     axes[0,0].set_ylabel('$e$',fontsize = labelsize)
     axes[0,0].legend(loc = 'lower left', fontsize = 22, \
@@ -59,12 +61,13 @@ def plot_NeurIPS(sim, sim2, sim3, t, asteroids, asteroids_extra, t_end, h, typeP
                 ncol=5, mode="expand", borderaxespad=0.)
 
     # energy drift in the second row
-    axes[1,1].plot(time, sim2.energy, linestyle = '-',  color = color[3],alpha=1, label= 'Error with WH-HNN')
-    axes[1,2].plot(time, sim3.energy, alpha=1, linestyle = '-',  color = color[3],label= 'Error with WH-DNN')
+    axes[1,1].plot(time, sim2.energy, linestyle = '-',  color = color3[1],alpha=1, label= 'Error with WH-HNN')
+    axes[1,2].plot(time, sim3.energy, alpha=1, linestyle = '-',  color = color3[2],label= 'Error with WH-DNN')
     for i in range(3):
-        axes[1,i].plot(time, sim.energy, alpha=1, linestyle = '-',  color = color[9], label= 'Error with WH')
+        axes[1,i].plot(time, sim.energy, alpha=1, linestyle = '-',  color = color3[0], label= 'Error with WH')
         axes[1,i].ticklabel_format(useOffset=False)
-        axes[1,i].set_xlabel('$t$ [years]',fontsize = labelsize)
+        axes[0,i].set_xlabel('$t$ (yr)',fontsize = labelsize)
+        axes[1,i].set_xlabel('$t$ (yr)',fontsize = labelsize)
         
     axes[1,0].set_ylabel('$dE/E_0$',fontsize = labelsize)
     axes[1,0].legend(loc = 'lower left', fontsize = 18, framealpha = 0.9)
@@ -136,11 +139,11 @@ def plot_CompPhys_trajectory(sim, sim2, sim3, t, t_end, asteroids, asteroids_ext
     max_lim = data_nb['ecc'][:, 1:].max()
     for col in range(3):
         axes[0,col].axis('equal')
-        axes[0,col].set_xlabel('x (au)',fontsize = labelsize)
-        axes[0,col].set_ylabel('y (au)',fontsize = labelsize)
+        axes[0,col].set_xlabel('$x$ (au)',fontsize = labelsize)
+        axes[0,col].set_ylabel('$y$ (au)',fontsize = labelsize)
         
-        axes[1,col].set_xlabel('t (yr)',fontsize = labelsize)
-        axes[1,col].set_ylabel('e',fontsize = labelsize)
+        axes[1,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
+        axes[1,col].set_ylabel('$e$',fontsize = labelsize)
 
         axes[0, col].set_xlim(data_nb['x'].min()*1.1, data_nb['x'].max()*1.1)
         axes[0, col].set_ylim(data_nb['y'].min()*1.1, data_nb['y'].max()*1.1)
@@ -217,28 +220,29 @@ def plot_CompPhys_trajectory_JS(sim, sim2, sim3, t, t_end, asteroids, asteroids_
     color_e3 = color2[7]
     lnwidth = 2
 
+    axes[2,0].plot(time, np.array(sim.energy) *1e3 , linestyle = '-', linewidth = lnwidth,color = color_e2, alpha=1, label = 'Error with WH')
     axes[2,1].plot(time, np.array(sim2.energy)*1e3,  linestyle = '-',  linewidth = lnwidth,color = color_e2,alpha=1, label= 'Error with WH-HNN')
-    axes[2,2].plot(time, np.array(sim3.energy) *1e3, alpha=1, linestyle = '-',linewidth = lnwidth, color = color_e3,label= 'Error with WH-DNN')
+    axes[2,2].plot(time, np.array(sim3.energy) *1e3, alpha=1, linestyle = '-',linewidth = lnwidth, color = color_e2,label= 'Error with WH-DNN')
 
     axes[0,0].set_title("Numerical integrator", fontsize = titlesize)
     axes[0,1].set_title("Hamiltonian Neural Network", fontsize = titlesize)
     axes[0,2].set_title("Deep Neural Network", fontsize = titlesize)
     
-    axes[0,0].set_ylabel('y (au)',fontsize = labelsize)
-    axes[1,0].set_ylabel('e',fontsize = labelsize)  
+    axes[0,0].set_ylabel('$y$ (au)',fontsize = labelsize)
+    axes[1,0].set_ylabel('$e$',fontsize = labelsize)  
     axes[2,0].set_ylabel(r'$dE/E_0 \;(\times 10^{-3})$',fontsize = labelsize)
 
     min_lim = data_nb['ecc'][:, 1:].min()
     max_lim = data_nb['ecc'][:, 1:].max()
     for col in range(3):
         axes[0,col].axis('equal')
-        axes[0,col].set_xlabel('x (au)',fontsize = labelsize)
+        axes[0,col].set_xlabel('$x$ (au)',fontsize = labelsize)
     
-        axes[1,col].set_xlabel('t (yr)',fontsize = labelsize)
+        axes[1,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
         axes[1,col].get_yaxis().set_major_formatter('{x:1.3f}')
 
-        axes[2,col].plot(time, np.array(sim.energy) *1e3 , linestyle = '-', linewidth = lnwidth,color = color_e, alpha=1, label = 'Error with WH')
-        axes[2,col].set_xlabel('t (yr)',fontsize = labelsize)
+        # axes[2,col].plot(time, np.array(sim.energy) *1e3 , linestyle = '-', linewidth = lnwidth,color = color_e, alpha=1, label = 'Error with WH')
+        axes[2,col].set_xlabel('$t$ (yr)',fontsize = labelsize)
         axes[2,col].ticklabel_format(useOffset=False)
 
         axes[0, col].set_xlim(data_nb['x'].min()*1.1, data_nb['x'].max()*1.1)
@@ -260,9 +264,9 @@ def plot_CompPhys_trajectory_JS(sim, sim2, sim3, t, t_end, asteroids, asteroids_
     axes[0,0].legend(loc = 'lower left', fontsize = 27, \
                 framealpha = 0.9, bbox_to_anchor=(0.0, 1.24, 2.0, 1.5),\
                 ncol=6, mode="expand", borderaxespad=0.)
-    axes[2,0].legend(loc = 'lower left', fontsize = 23, framealpha = 0.9)
-    axes[2,1].legend(loc = 'lower left', fontsize = 23, framealpha = 0.9)
-    axes[2,2].legend(loc = 'upper left', fontsize = 23, framealpha = 0.8)
+    # axes[2,0].legend(loc = 'lower left', fontsize = 23, framealpha = 0.9)
+    # axes[2,1].legend(loc = 'lower left', fontsize = 23, framealpha = 0.9)
+    # axes[2,2].legend(loc = 'upper left', fontsize = 23, framealpha = 0.8)
 
     for i in range(3):
         for j in range(3):
@@ -580,7 +584,7 @@ def plot_energyvsH(sim, sim2, t_end):
     axes.plot(time, E_2, '--',  linewidth = lw, color = color1[2], label = 'WH-HNN Energy')
     axes.plot(time, np.array(sim2.H), linewidth = lw, color = color1[1], label = 'WH-HNN H')
     # plt.title('Comparison of interactive Hamiltonian \n and the predicted output of the HNN', fontsize = 13)
-    plt.xlabel('t (yr)', fontsize =30)
+    plt.xlabel('$t$ (yr)', fontsize =30)
     plt.ylabel(r'Energy ($\rm {kg}\; {au}^2\; yr^{-2} \times 10^{-6}$)', fontsize =30)
 
     plt.xticks(fontsize = 25)
@@ -707,9 +711,9 @@ def plot_asteroids_accel():
     # t_1 = t_num[7, 1] / ((asteroids[7]+2) * np.log(asteroids[7]+2))  # First time is for 5 asteroids (+2 planets). time per operation
     # axes[0].plot(asteroids, t_1 *((asteroids+2) * np.log(asteroids+2)) , color = 'blue', linewidth = 3, alpha = 0.5, linestyle = '--', label = 'N log(N)' )
     t_2 = t_num[7, 0] / (asteroids[7]+2)**2 
-    axes[0].plot(asteroids, t_2 *((asteroids+2)**2) , color = 'black', linewidth = 3, alpha = 0.5, linestyle = '--', label = r'$N^2$' )
+    axes[0].plot(asteroids, t_2 *((asteroids+2)**2) , color = 'black', linewidth = 3, alpha = 0.7, linestyle = '--', label = r'$N^2$' )
     t_3 = t_num[8, 1] / ((asteroids[8]+2)) # First time is for 5 asteroids (+2 planets). time per operation
-    axes[0].plot(asteroids, t_3 *(asteroids+2)  , color = 'black', linewidth = 3, alpha = 0.5, linestyle = ':', label = r'$N$' )
+    axes[0].plot(asteroids, t_3 *(asteroids+2)  , color = 'black', linewidth = 3, alpha = 0.7, linestyle = ':', label = r'$N$' )
     
 
     axes[0].set_xlabel('Number of asteroids', fontsize = 27)
@@ -732,7 +736,7 @@ def plot_asteroids_accel():
     axes[1].plot([], [], color = 'black', linestyle = '--', label = 'HNN')
     axes[1].plot([], [], color = 'black', linestyle = '-', label = 'WH-HNN ')
     axes[1].set_xlabel('Number of asteroids', fontsize = 27)
-    axes[1].set_ylabel(r'$\rm t - t_{WH}$ (s)', fontsize = 27, color = color1[0])
+    axes[1].set_ylabel(r'$\rm tc - tc_{WH}$ (s)', fontsize = 27, color = color1[0])
     axes[1].set_xscale('log')
     axes[1].set_yscale('symlog', linthresh = 1)
     axes[1].tick_params(axis='both', which='major', labelsize=25)

@@ -51,12 +51,12 @@ def plot_tanh_log():
     y5 = x + np.sin(x)**2
     f, ax = plt.subplots(figsize = (14,4),nrows=1, ncols=1)
     lw = 4
-    plt.plot(x, y1, '-.', linewidth = lw,  label =r'SymmetricLog: f(x) = $tanh(x)\; \cdot log(tanh(x) \cdot x+1)$', color = color2[1])
-    plt.plot(x, y2, linewidth = lw, label ='tanh: f(x) = $tanh(x)$', color = color2[0])
-    plt.plot(x, y3, '--', linewidth = lw, label ='ReLU: f(x) = $max(0, z$)', color = color2[2])
+    plt.plot(x, y1, '-.', linewidth = lw,  label =r'SymmetricLog: $f(x)$ = tanh($x$) log($x$ tanh($x$)+1)', color = color2[1])
+    plt.plot(x, y2, linewidth = lw, label ='tanh: $f(x)$ = tanh(x)', color = color2[0])
+    plt.plot(x, y3, '--', linewidth = lw, label ='ReLU: $f(x)$ = max(0, $x$)', color = color2[2])
 
-    plt.xlabel('x', fontsize= 23)
-    plt.ylabel('f(x)', fontsize= 23)
+    plt.xlabel('$x$', fontsize= 23)
+    plt.ylabel('$f(x)$', fontsize= 23)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xscale('symlog')

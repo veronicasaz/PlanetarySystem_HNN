@@ -134,7 +134,7 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
     plt.subplots_adjust(wspace = 0.5, hspace=2.2)
 
-    xlabel = [r'\rm x', r'\rm y', r"\rm z"]
+    xlabel = [r'x', r'y', r"z"]
     title = ['Jupiter', 'Saturn', 'Asteroids']
     for sbu in range(subplot1):
         subfigs[sbu].subplots_adjust(left = 0.07, right = 0.82, wspace = 0.4, hspace = 2.0, top = 0.89, bottom = 0.25)
@@ -144,12 +144,12 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
         for sbu2 in range(subplot2):
             var = sbu*3+ sbu2
             xline = np.linspace(min(y_real[:, var])*1.2, max(y_real[:,var])*1.2, num= 2)
-            ax[sbu2].plot(xline, xline, color = 'black', linewidth = 4, zorder = 1, alpha = 0.5, label = 'Zero-error line')
+            ax[sbu2].plot(xline, xline, color = 'black', linewidth = 4, zorder = 1, alpha = 0.5, label = 'Zero-error')
 
             RMSE = np.square(np.subtract(y_real[:, var], y_pred[:, var])).mean()
             RMSE2 = np.square(np.subtract(y_real2[:, var], y_pred2[:, var])).mean() 
-            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN with all bodies', color = color1[0], marker = 'o', s = 10, zorder = 2)
-            ax[sbu2].scatter(y_real3[:, var], y_pred3[:, var], label = 'HNN asteroid in loss', color = color1[2], marker = 'o', s = 10, zorder = 3)
+            ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN: three bodies in loss function', color = color1[0], marker = 'o', s = 10, zorder = 2)
+            ax[sbu2].scatter(y_real3[:, var], y_pred3[:, var], label = 'HNN: asteroids in loss function', color = color1[2], marker = 'o', s = 10, zorder = 3)
             ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 'o', s = 10, zorder =4)
             # ax[sbu2].set_title("HNN RMSE = %0.2E, DNN RMSE = %0.2E, "%(RMSE, RMSE2), fontsize = 12)
 
@@ -158,24 +158,42 @@ def plot_prediction_error_HNNvsDNN(path_figure, x, y_pred, y_real, x2, y_pred2, 
             
             # Normalize axis
             if sbu == 0:
-                norm = 1e4
+                if sbu2 == 2:
+                    norm = 1e5
+                    ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-5})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-5})$"%xlabel[int(var%3)], fontsize = 32)
+                else:
+                    norm = 1e4
                 # ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^4$ ($au/yr^2$)", fontsize = 32)
                 # ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^4$ ($au/yr^2$)", fontsize = 32)
 
-                ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
-                ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
+                
             elif sbu == 1:
-                norm = 1e3
+                if sbu2 == 2:
+                    norm = 1e4
+                    ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-4})$"%xlabel[int(var%3)], fontsize = 32)
+                else:
+                    norm = 1e3
                 # ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real $\times10^3$ ($au/yr^2$)", fontsize = 32)
                 # ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted  $\times10^3$ ($au/yr^2$)", fontsize = 32)
-                ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
-                ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
             elif sbu == 2:
-                norm = 1
+                if sbu2 == 2:
+                    norm = 1e3
+                    ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-3})$"%xlabel[int(var%3)], fontsize = 32)
+                else: 
+                    norm = 1e2
+                    ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2 \; \times10^{-2})$"%xlabel[int(var%3)], fontsize = 32)
+                    ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2 \;\times10^{-2})$"%xlabel[int(var%3)], fontsize = 32)
                 # ax[sbu2].set_xlabel(xlabel[int(var%3)]+r" real ($au/yr^2$)", fontsize = 32)
                 # ax[sbu2].set_ylabel(xlabel[int(var%3)]+r" predicted ($au/yr^2$)", fontsize = 32)
-                ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 32)
-                ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 32)
+                # ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 32)
+                # ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 32)
             
 
             ticks = -np.log10(ax[sbu2].get_xticks())
@@ -285,7 +303,7 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
     subfigs = fig.subfigures( nrows=subplot1, ncols=1)
     plt.subplots_adjust(wspace = 0.5, hspace=2.2)
 
-    xlabel = [r'\rm x', r'\rm y', r"\rm z"]
+    xlabel = [r'x', r'y', r"z"]
     title = ['Jupiter', 'Saturn']
     for sbu in range(subplot1):
         subfigs[sbu].suptitle(title[sbu], fontsize = 35, x=0.41, y=.97, horizontalalignment='left')
@@ -296,7 +314,7 @@ def plot_prediction_error_HNNvsDNN_JS_dif(path_figure, x, y_pred, y_real, x2, y_
         for sbu2 in range(subplot2):
             var = sbu*3+ sbu2
             ax[sbu2].scatter(y_real[:, var], y_pred[:, var], label = 'HNN', color = color1[0], marker = 'o', s = 50, zorder = 3)
-            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 's', s = 50, zorder =2)
+            ax[sbu2].scatter(y_real2[:, var], y_pred2[:, var], label = 'DNN', color = color1[1], marker = 'o', s = 50, zorder =2)
 
             ax[sbu2].set_xlabel(r"$a_{%s}^{\rm real}  \;(\rm au/\rm yr^2)$"%xlabel[int(var%3)], fontsize = 35)
             ax[sbu2].set_ylabel(r"$a_{%s}^{\rm pred}\;(\rm au/yr^2)$"%(xlabel[int(var%3)]), fontsize = 35)

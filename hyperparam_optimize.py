@@ -474,9 +474,9 @@ def plot_optim(data, N):
     index_val = np.where(D_samples[:, 1] == np.min(D_samples[:, 1]))[0]
     plt.scatter(D_samples[:, 0], D_samples[:, 1], s = 150, marker = 'o' , color = color2[1])
     
-    label1 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f\n"%(D_samples[index, 2],\
+    label1 = "Samples: %i \nLayers: %i \nNeurons: %i \nRatio of neurons: %0.1f\n"%(D_samples[index, 2],\
         D_samples[index, 3], D_samples[index, 4], D_samples[index, 5])
-    label2 = "Samples: %i, \nLayers: %i, \nNeurons: %i, \nRatio of neurons: %0.2f"%(D_samples[index_val, 2],\
+    label2 = "Samples: %i \nLayers: %i \nNeurons: %i \nRatio of neurons: %0.1f"%(D_samples[index_val, 2],\
         D_samples[index_val, 3], D_samples[index_val, 4], D_samples[index_val, 5])
     plt.scatter(D_samples[index, 0], D_samples[index, 1], s = 250, color = color2[0], marker = 's' , label = label1)
     plt.scatter(D_samples[index_val, 0], D_samples[index_val, 1], s = 250, color =color2[2], marker = 's' , label = label2)
@@ -486,7 +486,7 @@ def plot_optim(data, N):
     plt.grid(alpha = 0.5)
     # plt.axis('equal')
 
-    plt.xlabel("Train loss", fontsize = 30)
+    plt.xlabel("Training loss", fontsize = 30)
     plt.ylabel("Validation loss", fontsize = 30)
     plt.xticks(fontsize = 28)
     plt.yticks(fontsize = 28)
