@@ -2,7 +2,7 @@
 Created: July 2021 
 Last modified: October 2022 
 Author: Veronica Saz Ulibarrena 
-Description: Plots of datase
+Description: Plots of database
 """
 import sys
 import os
@@ -28,6 +28,7 @@ def plot_pairplot(data, name):
     plot_pairplot: plot scatter of every input and output
     INPUTS: 
         data: data dictionary
+        name: name of the file to be saved
     """
     data_np = np.hstack((data['coords'], data['dcoords']))
     # Create labels for pandas dataframe
@@ -95,6 +96,7 @@ def plot_distribution(coords, dcoords, namefile, name):
     INPUTS: 
         coords: inputs (mass and position of each body)
         dcoords: outputs (acceleration of each body)
+        namefile: name of the file to be saved to
         name: addition to name of figure to be saved
     """
     # Plot new distribution inputs
@@ -179,6 +181,7 @@ def plot_distance(data, name):
     Each combination is a subplot
     INPUTS: 
         data: dataset with inputs and outputs
+        name: name of the file to save into
     """
     coords = data['coords']
     dcoords = data['dcoords']
@@ -223,6 +226,7 @@ def plot_distance3D(data, name):
     plot_distance3D: plot acceleration value of asteroid for each distance combination
     INPUTS: 
         data: dataset with inputs and outputs
+        name: name of the file to save into
     """
     coords = data['coords']
     dcoords = data['dcoords']
@@ -296,6 +300,7 @@ def plot_covariance_samples(data, name):
     plot_covariance_samples: plot covariance as a function of the number of samples
     INPUTS: 
         data: dataset with inputs and outputs
+        name: name of the file to save into
     """
     samples = [30, 50, 100, 500, 1000, 2000, 5000] # at least more than the number of inputs
     I = np.zeros(len(samples))
@@ -329,6 +334,7 @@ def plot_covariance(data, name):
     plot_covariance: plot covariance 
     INPUTS: 
         data: dataset with inputs and outputs
+        name: name of the file to save into
     """
     samples = 1000
     tests = 50
@@ -362,6 +368,7 @@ def plot_trajectory(data, name):
     plot_trajectory: plot distribution of inputs in x-y plane 
     INPUTS: 
         data: dataset with inputs and outputs
+        name: name of the file to save into
     """
     fig, ax = plt.subplots(figsize = (8,6),nrows=1, ncols=1)
     # fig.subplots_adjust(top=0.9,hspace = 0.3, wspace= 0.4)

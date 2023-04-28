@@ -1,3 +1,9 @@
+"""
+Created: July 2021 
+Last modified: July 2022 
+Author: Veronica Saz Ulibarrena 
+Description: additional plots for the papers
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib 

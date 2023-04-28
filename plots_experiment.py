@@ -250,6 +250,8 @@ def simulate(t_end, h, asteroids, asteroids_extra, multiple, flag, name, R):
 def load_model_asteroids():
     """
     load_model_asateroids: load network(s) needed for study of number of asteroids
+    OUTPUTS:
+        ANN_tf: network or networks to use for the prediction fo the asteroids
     """
     settings_file_path= "./config_ANN.json"
     settings = load_json(settings_file_path)
@@ -291,6 +293,8 @@ def load_model_asteroids():
 def run_asteroids(R):
     """
     run_asteroids: simulate with different numbers of asteroids
+    INPUTS: 
+        R: tolerance for errors in the prediction of neural networks.
     """
     sr = rebound.Simulation()
     sr.units = {'yr', 'au', 'MSun'}
@@ -430,6 +434,11 @@ def run_asteroids(R):
 def compute_predError(t_end, h, asteroids, asteroids_extra):
     """
     compute_predError for errorPhaseOrbit
+    INPUTS:
+        t_end: final time for the integration
+        h: time step for the integration
+        asteroids: number of asteroids
+        asteroids_extra: number of asteroids for extrapolation
     """
     sr = rebound.Simulation()
     sr.units = {'yr', 'au', 'MSun'}
@@ -601,6 +610,9 @@ if __name__ == "__main__":
                     flags_i, time_i, asteroids, asteroids_extra, flags_R)
 
     elif run == 4:
+        """
+        Plot acceleration of the asteroids in time
+        """
         multiple = 'Asteroid_JS'
         ##########################################
         # Asteroids vs time and energy
@@ -622,6 +634,9 @@ if __name__ == "__main__":
         plot_energyvsH(sim, sim2, t_end)
 
     elif run == 6:
+        """
+        run and plot the prediction error and the error in phase
+        """
         t_end = 1000
         asteroids = 0
         asteroids_extra = 0

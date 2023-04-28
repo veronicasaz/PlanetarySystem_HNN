@@ -66,7 +66,12 @@ def loss_weight_mse(x, y, y_pred, w):
 class ANN(tf.keras.Model):
     def __init__(self, settings, params_net, w, path_model = None, path_std = None, restart = False, seed = None):
         """
+        ANN: class for the neural network
+        INPUTS:
+            settings: configuration file 
             path_model: path to save/load trained model
+            path_std: path for the standardization file
+            seed: seed for initial random weight initialization
             restart: restart training using a created model as starting point
         """
 
@@ -114,6 +119,11 @@ class ANN(tf.keras.Model):
         self.loss = loss_weight_mse
 
     def create_model(self):
+        """
+        create_model: create neurons and weights
+        OUTPUTS:
+            model: created model
+        """
         param_layer = int(self.params_net[1])
         param_neurons = int(self.params_net[2])
         param_neurdecay = self.params_net[3]
@@ -159,7 +169,14 @@ class ANN(tf.keras.Model):
 
     @tf.function
     def time_derivative(self, dH, x):       
-       
+        """
+        time_derivative: time_derivative for HNN
+        INPUTS: 
+            dH: derivative of output with respect to inputs
+            x: inputs
+        OUTPUTS:
+            y: accelerations
+        """    
         # flip first 3 rows with last 3 rows
         n_inputs = dH.get_shape().as_list()[1]
         n_samples = dH.get_shape().as_list()[0]
@@ -190,8 +207,15 @@ class ANN(tf.keras.Model):
 
     @tf.function
     def train_step(self, x, y):
-        # https://stackoverflow.com/questions/65058699/using-gradients-in-a-custom-loss-function-tensorflowkeras
-        # y_pred, g = time_derivative(x)
+        """
+        train_step: evaluate loss and upgrade weights
+        INPUTS: 
+            x: inputs
+            y: real output
+        OUTPUTS:
+            loss_value: loss at this step
+        https://stackoverflow.com/questions/65058699/using-gradients-in-a-custom-loss-function-tensorflowkeras
+        """
         with tf.GradientTape(persistent=True) as g:
             g.watch(x)
             H = self.model(x, training=True)
@@ -213,6 +237,14 @@ class ANN(tf.keras.Model):
     
     @tf.function
     def test_step(self, x, y):
+        """
+        test_step: get validation loss for a time step
+        INPUTS: 
+            x: inputs of the network
+            y: real output
+        OUTPUTS:
+            loss_value: loss at this step 
+        """
         with tf.GradientTape(persistent=True) as g:
             g.watch(x)
             H = self.model(x, training=False)
@@ -229,6 +261,11 @@ class ANN(tf.keras.Model):
 
             
     def train(self, data):
+        """
+        train: main training function. Training loop
+        INPUTS: 
+            data: training dataset
+        """
         features = data['coords']
         labels = data['dcoords']
         # Save history
@@ -295,6 +332,11 @@ class ANN(tf.keras.Model):
 
 
     def saveTraining(self, path= None):
+        """
+        saveTraining: save training progress
+        INPUTS:
+            path: path where to save
+        """
         if path == None:
             path = self.path_model
         path = path +"training.txt"
@@ -305,6 +347,12 @@ class ANN(tf.keras.Model):
         np.savetxt(path, vector)
 
     def plotTraining(self, path_figure, path_training_process = None):
+        """
+        plotTraining: plot training progress
+        INPUTS:
+            path_figure: path where to save figure
+            path_training_process: path where training data is saved
+        """
         colors = ['r-.','g-.','k-.','b-.','r-.','g-.','k-.','b-.','r-','g-','k-','b-','r--','g--','k.-','b.-']
         
         if path_training_process:
@@ -336,6 +384,13 @@ class ANN(tf.keras.Model):
         # plt.show()
 
     def load_model_fromFile(self, path= None):
+        """
+        load_model_fromFile: load saved model
+        INPUTS: 
+            path: if given, path where model is stored
+        OUTPUTS:
+            model: loaded model
+        """
         if path == None:
             path = self.path_model
         print(path +'model.h5')
@@ -344,9 +399,15 @@ class ANN(tf.keras.Model):
         self.model = model
         return model
 
-    def predict(self, inp, path_std = None, rotate = None, std = True):
+    def predict(self, inp, path_std = None, std = True):
         """
-        Simplified version for now
+        predict: Predict accelerations when output is H
+        INPUTS:
+            inp: inputs to the network
+            path_std: path of standardization file
+            std: if True, apply standardization
+        OUTPUTS:
+            predictions: output of the network, accelerations
         """
         if inp.ndim == 1:
             inp = np.expand_dims(inp, axis=0)
@@ -593,7 +654,7 @@ if __name__ == "__main__":
     ###################################
     # Hyperparameter optimization
     ###################################
-    # optimize(data, settings, params, N)
+    optimize(data, settings, params, N)
     plot_optim(data, N)
 
     ###################################
@@ -603,6 +664,6 @@ if __name__ == "__main__":
     w2 = [1, 10, 20, 50, 100, 1000]
     w = [w1, w2]
 
-    # mse = optimize_w(data, settings, w, N)
-    # plot_optim_w(data, N)
-    # plot_mse(data, N, mse)
+    mse = optimize_w(data, settings, w, N)
+    plot_optim_w(data, N)
+    plot_mse(data, N, mse)
